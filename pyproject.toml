@@ -3,7 +3,7 @@ name = "wikitree-mcp"
 version = "0.1.0"
 description = "MCP server exposing WikiTree's genealogy API as tools for Claude"
 readme = "README.md"
-license = "MIT"
+license = "AGPL-3.0-only"
 requires-python = ">=3.12"
 dependencies = [
     "mcp[cli]>=1.2.0",

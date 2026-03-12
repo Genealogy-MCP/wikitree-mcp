@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Relicensed from MIT to AGPL-3.0-only — copyleft with network-use share-back requirement (closes SaaS loophole); updated `LICENSE`, `pyproject.toml`, and added SPDX headers to all source files
 - `make test` now passes `-m "not live"` to exclude live tests from the default run
 - `WIKITREE_APP_ID` is no longer required; falls back to `Genealogy-MCP_wikitree-mcp`
 
