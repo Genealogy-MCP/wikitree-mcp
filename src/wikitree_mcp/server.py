@@ -17,7 +17,7 @@ class AppContext:
 
 @asynccontextmanager
 async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
-    settings = Settings()  # type: ignore[call-arg]
+    settings = Settings()
     client = WikiTreeClient(settings)
     try:
         yield AppContext(client=client)

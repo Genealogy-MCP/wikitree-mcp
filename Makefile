@@ -1,11 +1,14 @@
-.PHONY: install test lint format type-check check build clean
+.PHONY: install test test-live lint format type-check check build clean
 
 install:
-	uv sync
+	uv sync --group dev
 
 test:
-	uv run coverage run -m pytest
+	uv run coverage run -m pytest -m "not live"
 	uv run coverage report
+
+test-live:
+	uv run pytest -m live --run-live -v
 
 lint:
 	uv run ruff check src tests

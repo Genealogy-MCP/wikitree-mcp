@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Live API smoke tests (`tests/test_live_client.py`, `tests/test_live_tools.py`) gated behind `@pytest.mark.live` marker and `--run-live` pytest flag; never run in CI
+- `make test-live` Makefile target for running live tests manually
+- `live_settings` and `live_client` fixtures in `conftest.py` for real HTTP tests
+- Default value for `WIKITREE_APP_ID` setting (`Genealogy-MCP_wikitree-mcp`); env var still overrides
+
+### Fixed
+
+- `_check_status` now accepts empty string `""` as a success status — `getPeople` returns `status: ""` on success, which was incorrectly treated as an error
+
+### Changed
+
+- `make test` now passes `-m "not live"` to exclude live tests from the default run
+- `WIKITREE_APP_ID` is no longer required; falls back to `Genealogy-MCP_wikitree-mcp`
+
+### Deprecated
+
+- `getAncestors` API action is deprecated by WikiTree; live tests now use `getPeople` with `ancestors=1` instead
+
+### Added
+
 - Initial release with 10 WikiTree API tools
 - `get_profile` — retrieve person or free-space profile
 - `get_person` — retrieve person profile

@@ -47,7 +47,7 @@ class WikiTreeClient:
     def _check_status(self, data: list[dict[str, Any]]) -> None:
         for item in data:
             status = item.get("status")
-            if isinstance(status, str) and status != "0":
+            if isinstance(status, str) and status not in ("0", ""):
                 raise WikiTreeApiError(status)
 
     async def close(self) -> None:
