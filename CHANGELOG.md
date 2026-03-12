@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `make help` as the default target — running bare `make` now prints a self-documenting list of all targets
 - Live API smoke tests (`tests/test_live_client.py`, `tests/test_live_tools.py`) gated behind `@pytest.mark.live` marker and `--run-live` pytest flag; never run in CI
 - `make test-live` Makefile target for running live tests manually
 - `live_settings` and `live_client` fixtures in `conftest.py` for real HTTP tests
@@ -26,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 - `getAncestors` API action is deprecated by WikiTree; live tests now use `getPeople` with `ancestors=1` instead
+
+## [0.1.0] - Initial Release
 
 ### Added
 

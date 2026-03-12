@@ -1,29 +1,34 @@
-.PHONY: install test test-live lint format type-check check build clean
+.PHONY: help install test test-live lint format type-check check build clean
 
-install:
+.DEFAULT_GOAL := help
+
+help: ## Show this help
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+
+install: ## Install dependencies
 	uv sync --group dev
 
-test:
+test: ## Run tests with coverage (excludes live)
 	uv run coverage run -m pytest -m "not live"
 	uv run coverage report
 
-test-live:
+test-live: ## Run live tests against real WikiTree API
 	uv run pytest -m live --run-live -v
 
-lint:
+lint: ## Lint source and tests
 	uv run ruff check src tests
 
-format:
+format: ## Auto-format source and tests
 	uv run ruff format src tests
 
-type-check:
+type-check: ## Run static type checker
 	uv run pyright
 
-check: lint type-check test
+check: lint type-check test ## Run lint + type-check + test
 
-build:
+build: ## Build wheel
 	uv build
 
-clean:
+clean: ## Remove build artifacts and caches
 	rm -rf dist build .pytest_cache .ruff_cache .coverage htmlcov
 	find . -type d -name __pycache__ -exec rm -rf {} +

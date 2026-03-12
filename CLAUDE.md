@@ -3,6 +3,7 @@
 ## Commands
 
 ```bash
+make               # show help (default target)
 make install       # uv sync --group dev
 make test          # coverage run + report (excludes live tests)
 make test-live     # pytest -m live --run-live -v (hits real API)
