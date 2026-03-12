@@ -21,7 +21,7 @@ MCP server exposing [WikiTree's](https://www.wikitree.com/) genealogy API as too
 
 | Environment Variable | Required | Default | Description |
 |---|---|---|---|
-| `WIKITREE_APP_ID` | Yes | — | Your application identifier for the WikiTree API |
+| `WIKITREE_APP_ID` | No | `Genealogy-MCP_wikitree-mcp` | Your application identifier for the WikiTree API |
 | `WIKITREE_API_BASE_URL` | No | `https://api.wikitree.com/api.php` | WikiTree API endpoint |
 | `WIKITREE_HTTP_TIMEOUT` | No | `10.0` | HTTP request timeout in seconds |
 | `WIKITREE_MAX_RETRIES` | No | `3` | Max retry attempts for transient failures |
@@ -85,8 +85,11 @@ claude mcp add wikitree -- docker run -i --rm -e WIKITREE_APP_ID=your-app-id wik
 # Install dependencies
 make install
 
-# Run tests with coverage
+# Run tests with coverage (mocked, no network)
 make test
+
+# Run live tests against the real WikiTree API
+make test-live
 
 # Run all checks (lint + type-check + test)
 make check

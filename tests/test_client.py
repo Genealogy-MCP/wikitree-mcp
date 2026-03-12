@@ -36,6 +36,14 @@ async def test_call_injects_app_id(client: WikiTreeClient, mock_api: respx.MockR
     assert "appId=test-app" in body
 
 
+async def test_call_accepts_empty_string_status(
+    client: WikiTreeClient, mock_api: respx.MockRouter
+) -> None:
+    mock_api.post("https://api.wikitree.com/api.php").respond(json=[{"people": {}, "status": ""}])
+    result = await client.call("getPeople", keys="Clemens-1")
+    assert result == [{"people": {}, "status": ""}]
+
+
 async def test_call_raises_on_api_error_status(
     client: WikiTreeClient, mock_api: respx.MockRouter
 ) -> None:

@@ -1,6 +1,3 @@
-import pytest
-from pydantic import ValidationError
-
 from wikitree_mcp.settings import Settings
 
 
@@ -24,6 +21,6 @@ def test_settings_custom_values() -> None:
     assert s.max_retries == 1
 
 
-def test_settings_missing_app_id_raises() -> None:
-    with pytest.raises(ValidationError):
-        Settings()  # type: ignore[call-arg]
+def test_settings_default_app_id() -> None:
+    s = Settings()
+    assert s.app_id == "Genealogy-MCP_wikitree-mcp"
