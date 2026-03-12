@@ -15,25 +15,19 @@ async def test_get_profile_clemens(live_client: WikiTreeClient) -> None:
 
 
 async def test_get_profile_franklin(live_client: WikiTreeClient) -> None:
-    result = await live_client.call(
-        "getProfile", key="Franklin-10478", fields="Id,Name,FirstName"
-    )
+    result = await live_client.call("getProfile", key="Franklin-10478", fields="Id,Name,FirstName")
     profile = result[0]["profile"]
     assert profile["FirstName"] == "Aretha"
 
 
 async def test_search_person_twain(live_client: WikiTreeClient) -> None:
-    result = await live_client.call(
-        "searchPerson", FirstName="Samuel", LastName="Clemens", limit=5
-    )
+    result = await live_client.call("searchPerson", FirstName="Samuel", LastName="Clemens", limit=5)
     assert len(result) >= 1
     assert result[0]["status"] == 0
 
 
 async def test_get_people_ancestors_clemens(live_client: WikiTreeClient) -> None:
-    result = await live_client.call(
-        "getPeople", keys="Clemens-1", ancestors=1, fields="Id,Name"
-    )
+    result = await live_client.call("getPeople", keys="Clemens-1", ancestors=1, fields="Id,Name")
     people = result[0].get("people", {})
     assert len(people) >= 2
 
