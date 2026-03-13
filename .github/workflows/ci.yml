@@ -26,6 +26,9 @@ jobs:
       - name: Format
         run: uv run ruff format --check src tests
 
+      - name: Check copyright headers
+        run: find src/ scripts/ tests/ -name '*.py' -exec python scripts/check_copyright_header.py {} +
+
       - name: Type check
         run: uv run pyright src
 

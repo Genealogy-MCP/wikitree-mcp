@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Federico Castagnini
 from typing import Any
 from unittest.mock import MagicMock
 

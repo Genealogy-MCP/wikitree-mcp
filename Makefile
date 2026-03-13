@@ -1,4 +1,4 @@
-.PHONY: help install test test-live lint format type-check check build clean
+.PHONY: help install test test-live lint format type-check check-headers check build clean
 
 .DEFAULT_GOAL := help
 
@@ -24,7 +24,10 @@ format: ## Auto-format source and tests
 type-check: ## Run static type checker
 	uv run pyright
 
-check: lint type-check test ## Run lint + type-check + test
+check-headers: ## Check AGPL copyright headers
+	find src/ scripts/ tests/ -name '*.py' -exec uv run python scripts/check_copyright_header.py {} +
+
+check: lint type-check check-headers test ## Run lint + type-check + headers + test
 
 build: ## Build wheel
 	uv build
