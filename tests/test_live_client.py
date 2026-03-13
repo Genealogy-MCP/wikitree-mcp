@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Federico Castagnini
 import pytest
 
 from wikitree_mcp.client import WikiTreeApiError, WikiTreeClient
