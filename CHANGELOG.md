@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `.github/dependabot.yml` — configured Dependabot for three ecosystems (pip, github-actions, docker) with `commit-message.prefix: "chore"` so version-update PRs follow Conventional Commits convention
 - `make help` as the default target — running bare `make` now prints a self-documenting list of all targets
 - Live API smoke tests (`tests/test_live_client.py`, `tests/test_live_tools.py`) gated behind `@pytest.mark.live` marker and `--run-live` pytest flag; never run in CI
 - `make test-live` Makefile target for running live tests manually
