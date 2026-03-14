@@ -29,6 +29,7 @@ dev = [
     "coverage[toml]>=7.0",
     "pyright>=1.1.390",
     "ruff>=0.8.0",
+    "pip-audit>=2.7.0",
 ]
 
 [tool.pytest.ini_options]
