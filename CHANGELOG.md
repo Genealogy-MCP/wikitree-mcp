@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `.github/dependabot.yml` — added `docker` ecosystem entry and `commit-message: prefix: "chore"` to all three entries (`pip`, `github-actions`, `docker`) so Dependabot PRs follow Conventional Commits convention
+
+- `tools/_errors.py` — `McpToolError` exception class and `raise_tool_error()` helper; single source of truth for error formatting (MCP-8, MCP-10)
+- `TOOL_REGISTRY` dict in `server.py` — derived at runtime from the FastMCP instance after all `register()` calls; satisfies MCP-6 without hardcoding tool counts
+- `tests/test_errors.py` — unit tests for `McpToolError` and `raise_tool_error()`
+- `tests/test_server.py` — asserts `len(TOOL_REGISTRY) == 10` and all 10 expected tool names present
+- CI rewritten to 3-job structure: **lint** (ruff + pyright + copyright headers), **test** (Python 3.10/3.11/3.12/3.13 matrix, `fail-fast: false`), **security** (`pip-audit`); added `concurrency` group to cancel stale runs
+- `pip-audit>=2.6.0` dev dependency
+- `make typecheck`, `make audit`, `make run`, `make run-stdio` Makefile targets; `make ci` and `make check` as aliases for the full pipeline
+
+### Changed
+
+- All 10 tools now wrap `client.call()` in `try/except WikiTreeApiError` and call `raise_tool_error()` — errors surface as `McpToolError` with actionable messages (MCP-8 compliance)
+- All 10 tools annotated with `_READ_ANNOTATIONS = ToolAnnotations(readOnlyHint=True, openWorldHint=True)` (MCP-5)
+- `requires-python` lowered from `>=3.12` to `>=3.10`; CI matrix extended to include 3.10 and 3.11
+- `pyproject.toml` `ruff target-version` and `pyright pythonVersion` updated from `py312`/`"3.12"` to `py310`/`"3.10"`
+- `make type-check` kept as alias for `make typecheck` for backward compatibility
+
+---
+
+### Added (prior)
+
 - `make help` as the default target — running bare `make` now prints a self-documenting list of all targets
 - Live API smoke tests (`tests/test_live_client.py`, `tests/test_live_tools.py`) gated behind `@pytest.mark.live` marker and `--run-live` pytest flag; never run in CI
 - `make test-live` Makefile target for running live tests manually

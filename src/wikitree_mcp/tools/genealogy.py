@@ -5,8 +5,12 @@ from __future__ import annotations
 from typing import Any
 
 from mcp.server.fastmcp import Context, FastMCP
+from mcp.types import ToolAnnotations
 
-from wikitree_mcp.client import WikiTreeClient
+from wikitree_mcp.client import WikiTreeApiError, WikiTreeClient
+from wikitree_mcp.tools._errors import raise_tool_error
+
+_READ_ANNOTATIONS = ToolAnnotations(readOnlyHint=True, openWorldHint=True)
 
 
 def _get_client(ctx: Context[Any, Any, Any]) -> WikiTreeClient:
@@ -14,7 +18,7 @@ def _get_client(ctx: Context[Any, Any, Any]) -> WikiTreeClient:
 
 
 def register(mcp: FastMCP) -> None:
-    @mcp.tool()
+    @mcp.tool(annotations=_READ_ANNOTATIONS)
     async def get_ancestors(
         ctx: Context[Any, Any, Any],
         key: str,
@@ -31,15 +35,18 @@ def register(mcp: FastMCP) -> None:
             bio_format: "wiki", "html", or "both"
         """
         client = _get_client(ctx)
-        return await client.call(
-            "getAncestors",
-            key=key,
-            depth=depth,
-            fields=fields,
-            bioFormat=bio_format,
-        )
+        try:
+            return await client.call(
+                "getAncestors",
+                key=key,
+                depth=depth,
+                fields=fields,
+                bioFormat=bio_format,
+            )
+        except WikiTreeApiError as e:
+            raise_tool_error(e, "get ancestors", identifier=key)
 
-    @mcp.tool()
+    @mcp.tool(annotations=_READ_ANNOTATIONS)
     async def get_descendants(
         ctx: Context[Any, Any, Any],
         key: str,
@@ -56,15 +63,18 @@ def register(mcp: FastMCP) -> None:
             bio_format: "wiki", "html", or "both"
         """
         client = _get_client(ctx)
-        return await client.call(
-            "getDescendants",
-            key=key,
-            depth=depth,
-            fields=fields,
-            bioFormat=bio_format,
-        )
+        try:
+            return await client.call(
+                "getDescendants",
+                key=key,
+                depth=depth,
+                fields=fields,
+                bioFormat=bio_format,
+            )
+        except WikiTreeApiError as e:
+            raise_tool_error(e, "get descendants", identifier=key)
 
-    @mcp.tool()
+    @mcp.tool(annotations=_READ_ANNOTATIONS)
     async def get_relatives(
         ctx: Context[Any, Any, Any],
         keys: str,
@@ -85,12 +95,15 @@ def register(mcp: FastMCP) -> None:
             get_spouses: Set to 1 to include spouses
         """
         client = _get_client(ctx)
-        return await client.call(
-            "getRelatives",
-            keys=keys,
-            fields=fields,
-            getParents=get_parents,
-            getChildren=get_children,
-            getSiblings=get_siblings,
-            getSpouses=get_spouses,
-        )
+        try:
+            return await client.call(
+                "getRelatives",
+                keys=keys,
+                fields=fields,
+                getParents=get_parents,
+                getChildren=get_children,
+                getSiblings=get_siblings,
+                getSpouses=get_spouses,
+            )
+        except WikiTreeApiError as e:
+            raise_tool_error(e, "get relatives", identifier=keys)

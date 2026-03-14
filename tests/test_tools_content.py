@@ -5,8 +5,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from wikitree_mcp.client import WikiTreeClient
+from wikitree_mcp.client import WikiTreeApiError, WikiTreeClient
 from wikitree_mcp.server import AppContext, create_server
+from wikitree_mcp.tools._errors import McpToolError
 
 
 @pytest.fixture
@@ -57,3 +58,10 @@ async def test_get_categories(mcp: Any, mock_ctx: MagicMock, mock_client: AsyncM
     result = await tool.fn(ctx=mock_ctx, key="Clemens-1")
     mock_client.call.assert_called_once_with("getCategories", key="Clemens-1")
     assert result == [{"categories": ["Authors"], "status": 0}]
+
+
+async def test_get_bio_api_error(mcp: Any, mock_ctx: MagicMock, mock_client: AsyncMock) -> None:
+    mock_client.call.side_effect = WikiTreeApiError("Permission Denied")
+    tool = _find_tool(mcp, "get_bio")
+    with pytest.raises(McpToolError, match="Permission Denied"):
+        await tool.fn(ctx=mock_ctx, key="Private-1", bio_format=None)

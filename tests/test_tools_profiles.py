@@ -5,8 +5,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from wikitree_mcp.client import WikiTreeClient
+from wikitree_mcp.client import WikiTreeApiError, WikiTreeClient
 from wikitree_mcp.server import AppContext, create_server
+from wikitree_mcp.tools._errors import McpToolError
 
 
 @pytest.fixture
@@ -121,3 +122,12 @@ async def test_search_person(mcp: Any, mock_ctx: MagicMock, mock_client: AsyncMo
         fields=None,
     )
     assert result == [{"status": 0}]
+
+
+async def test_get_profile_api_error(
+    mcp: Any, mock_ctx: MagicMock, mock_client: AsyncMock
+) -> None:
+    mock_client.call.side_effect = WikiTreeApiError("Permission Denied")
+    tool = _find_tool(mcp, "get_profile")
+    with pytest.raises(McpToolError, match="Permission Denied"):
+        await tool.fn(ctx=mock_ctx, key="Private-1", fields=None, bio_format=None, resolve_redirect=None)

@@ -5,8 +5,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from wikitree_mcp.client import WikiTreeClient
+from wikitree_mcp.client import WikiTreeApiError, WikiTreeClient
 from wikitree_mcp.server import AppContext, create_server
+from wikitree_mcp.tools._errors import McpToolError
 
 
 @pytest.fixture
@@ -81,3 +82,12 @@ async def test_get_relatives(mcp: Any, mock_ctx: MagicMock, mock_client: AsyncMo
         getSpouses=None,
     )
     assert result == [{"status": 0}]
+
+
+async def test_get_ancestors_api_error(
+    mcp: Any, mock_ctx: MagicMock, mock_client: AsyncMock
+) -> None:
+    mock_client.call.side_effect = WikiTreeApiError("Request failed after 3 retries")
+    tool = _find_tool(mcp, "get_ancestors")
+    with pytest.raises(McpToolError, match="failed"):
+        await tool.fn(ctx=mock_ctx, key="Bad-1", depth=2, fields=None, bio_format=None)

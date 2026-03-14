@@ -1,13 +1,18 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  check:
+  lint:
+    name: lint + typecheck
     runs-on: ubuntu-latest
 
     steps:
@@ -15,25 +20,72 @@ jobs:
 
       - uses: astral-sh/setup-uv@v4
         with:
-          version: "latest"
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
       - name: Install dependencies
         run: uv sync
 
       - name: Lint
-        run: uv run ruff check src tests
-
-      - name: Format
-        run: uv run ruff format --check src tests
+        run: |
+          uv run ruff check src/ tests/
+          uv run ruff format --check src/ tests/
 
       - name: Check copyright headers
-        run: find src/ scripts/ tests/ -name '*.py' -exec python scripts/check_copyright_header.py {} +
+        run: |
+          find src/ scripts/ tests/ -name '*.py' -exec python scripts/check_copyright_header.py {} +
 
       - name: Type check
-        run: uv run pyright src
+        run: uv run pyright src/
+
+  test:
+    name: test (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync
 
       - name: Test
-        run: uv run coverage run -m pytest tests/ -v
+        run: uv run coverage run -m pytest tests/ -v --ignore=tests/test_live_client.py --ignore=tests/test_live_tools.py
 
       - name: Coverage
         run: uv run coverage report
+
+  security:
+    name: security audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Audit dependencies
+        run: uv run pip-audit

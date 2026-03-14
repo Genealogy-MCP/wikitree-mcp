@@ -1,4 +1,4 @@
-.PHONY: help install test test-live lint format type-check check-headers check build clean
+.PHONY: help install test test-live lint format typecheck type-check check-headers audit ci check run run-stdio build clean
 
 .DEFAULT_GOAL := help
 
@@ -17,17 +17,32 @@ test-live: ## Run live tests against real WikiTree API
 
 lint: ## Lint source and tests
 	uv run ruff check src tests
+	uv run ruff format --check src tests
 
 format: ## Auto-format source and tests
 	uv run ruff format src tests
+	uv run ruff check --fix src tests
 
-type-check: ## Run static type checker
-	uv run pyright
+typecheck: ## Run static type checker
+	uv run pyright src/
+
+type-check: typecheck ## Alias for typecheck
 
 check-headers: ## Check AGPL copyright headers
 	find src/ scripts/ tests/ -name '*.py' -exec uv run python scripts/check_copyright_header.py {} +
 
-check: lint type-check check-headers test ## Run lint + type-check + headers + test
+audit: ## Run dependency security audit
+	uv run pip-audit
+
+ci: lint typecheck check-headers test audit ## Run full CI pipeline (lint + typecheck + headers + test + audit)
+
+check: ci ## Alias for ci
+
+run: ## Start server (streamable-HTTP on port 8000)
+	uv run wikitree-mcp
+
+run-stdio: ## Start server (stdio transport for Claude Code / Claude Desktop)
+	uv run wikitree-mcp --transport stdio
 
 build: ## Build wheel
 	uv build

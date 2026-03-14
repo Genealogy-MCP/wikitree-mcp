@@ -37,3 +37,19 @@ def create_server() -> FastMCP:
     content.register(mcp)
 
     return mcp
+
+
+def _build_tool_registry(mcp: FastMCP) -> dict[str, str]:
+    """Derive tool registry at runtime from the FastMCP instance.
+
+    Returns:
+        Dict mapping tool name to its description.
+    """
+    return {
+        tool.name: (tool.description or "")
+        for tool in mcp._tool_manager._tools.values()  # type: ignore[attr-defined]
+    }
+
+
+_mcp = create_server()
+TOOL_REGISTRY: dict[str, str] = _build_tool_registry(_mcp)

@@ -5,8 +5,12 @@ from __future__ import annotations
 from typing import Any
 
 from mcp.server.fastmcp import Context, FastMCP
+from mcp.types import ToolAnnotations
 
-from wikitree_mcp.client import WikiTreeClient
+from wikitree_mcp.client import WikiTreeApiError, WikiTreeClient
+from wikitree_mcp.tools._errors import raise_tool_error
+
+_READ_ANNOTATIONS = ToolAnnotations(readOnlyHint=True, openWorldHint=True)
 
 
 def _get_client(ctx: Context[Any, Any, Any]) -> WikiTreeClient:
@@ -14,7 +18,7 @@ def _get_client(ctx: Context[Any, Any, Any]) -> WikiTreeClient:
 
 
 def register(mcp: FastMCP) -> None:
-    @mcp.tool()
+    @mcp.tool(annotations=_READ_ANNOTATIONS)
     async def get_profile(
         ctx: Context[Any, Any, Any],
         key: str,
@@ -31,15 +35,18 @@ def register(mcp: FastMCP) -> None:
             resolve_redirect: Set to 1 to follow redirects
         """
         client = _get_client(ctx)
-        return await client.call(
-            "getProfile",
-            key=key,
-            fields=fields,
-            bioFormat=bio_format,
-            resolveRedirect=resolve_redirect,
-        )
+        try:
+            return await client.call(
+                "getProfile",
+                key=key,
+                fields=fields,
+                bioFormat=bio_format,
+                resolveRedirect=resolve_redirect,
+            )
+        except WikiTreeApiError as e:
+            raise_tool_error(e, "get profile", identifier=key)
 
-    @mcp.tool()
+    @mcp.tool(annotations=_READ_ANNOTATIONS)
     async def get_person(
         ctx: Context[Any, Any, Any],
         key: str,
@@ -56,15 +63,18 @@ def register(mcp: FastMCP) -> None:
             resolve_redirect: Set to 1 to follow redirects
         """
         client = _get_client(ctx)
-        return await client.call(
-            "getPerson",
-            key=key,
-            fields=fields,
-            bioFormat=bio_format,
-            resolveRedirect=resolve_redirect,
-        )
+        try:
+            return await client.call(
+                "getPerson",
+                key=key,
+                fields=fields,
+                bioFormat=bio_format,
+                resolveRedirect=resolve_redirect,
+            )
+        except WikiTreeApiError as e:
+            raise_tool_error(e, "get person", identifier=key)
 
-    @mcp.tool()
+    @mcp.tool(annotations=_READ_ANNOTATIONS)
     async def get_people(
         ctx: Context[Any, Any, Any],
         keys: str,
@@ -89,19 +99,22 @@ def register(mcp: FastMCP) -> None:
             start: Starting offset for pagination
         """
         client = _get_client(ctx)
-        return await client.call(
-            "getPeople",
-            keys=keys,
-            fields=fields,
-            ancestors=ancestors,
-            descendants=descendants,
-            siblings=siblings,
-            nuclear=nuclear,
-            limit=limit,
-            start=start,
-        )
+        try:
+            return await client.call(
+                "getPeople",
+                keys=keys,
+                fields=fields,
+                ancestors=ancestors,
+                descendants=descendants,
+                siblings=siblings,
+                nuclear=nuclear,
+                limit=limit,
+                start=start,
+            )
+        except WikiTreeApiError as e:
+            raise_tool_error(e, "get people", identifier=keys)
 
-    @mcp.tool()
+    @mcp.tool(annotations=_READ_ANNOTATIONS)
     async def search_person(
         ctx: Context[Any, Any, Any],
         first_name: str | None = None,
@@ -128,15 +141,19 @@ def register(mcp: FastMCP) -> None:
             fields: Comma-separated list of fields to return
         """
         client = _get_client(ctx)
-        return await client.call(
-            "searchPerson",
-            FirstName=first_name,
-            LastName=last_name,
-            BirthDate=birth_date,
-            DeathDate=death_date,
-            BirthLocation=birth_location,
-            Gender=gender,
-            limit=limit,
-            start=start,
-            fields=fields,
-        )
+        try:
+            return await client.call(
+                "searchPerson",
+                FirstName=first_name,
+                LastName=last_name,
+                BirthDate=birth_date,
+                DeathDate=death_date,
+                BirthLocation=birth_location,
+                Gender=gender,
+                limit=limit,
+                start=start,
+                fields=fields,
+            )
+        except WikiTreeApiError as e:
+            name = f"{first_name or ''} {last_name or ''}".strip()
+            raise_tool_error(e, "search person", identifier=name or None)
