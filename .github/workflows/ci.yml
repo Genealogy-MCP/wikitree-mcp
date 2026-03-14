@@ -14,7 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint + typecheck:
+  lint-typecheck:
+    name: lint + typecheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -70,7 +71,8 @@ jobs:
       - name: Coverage
         run: uv run coverage report
 
-  security audit:
+  security-audit:
+    name: security audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
