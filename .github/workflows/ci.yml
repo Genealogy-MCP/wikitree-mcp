@@ -18,9 +18,9 @@ jobs:
     name: lint + typecheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v7
         with:
           version: "latest"
 
@@ -55,9 +55,9 @@ jobs:
             name: "py3.13"
     name: test (${{ matrix.name }})
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v7
         with:
           version: "latest"
           python-version: ${{ matrix.python-version }}
@@ -75,9 +75,9 @@ jobs:
     name: security audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v7
         with:
           version: "latest"
 
