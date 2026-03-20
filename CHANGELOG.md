@@ -7,8 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-03-19
+
 ### Added
 
+- Initial release with 10 WikiTree API tools
+- `get_profile` — retrieve person or free-space profile
+- `get_person` — retrieve person profile
+- `get_people` — fetch multiple profiles by keys
+- `search_person` — search profiles by criteria
+- `get_ancestors` — get ancestral tree
+- `get_descendants` — get descendant tree
+- `get_relatives` — get parents, children, siblings, spouses
+- `get_bio` — retrieve biography text
+- `get_photos` — get photos linked to a profile
+- `get_categories` — retrieve associated categories
+- HTTP client with retry, timeout, and exponential backoff
+- Docker support (multi-stage build)
+- GitHub Actions CI pipeline
 - `.github/dependabot.yml` — configured Dependabot for three ecosystems (pip, github-actions, docker) with `commit-message.prefix: "chore"` so version-update PRs follow Conventional Commits convention
 - `make help` as the default target — running bare `make` now prints a self-documenting list of all targets
 - Live API smoke tests (`tests/test_live_client.py`, `tests/test_live_tools.py`) gated behind `@pytest.mark.live` marker and `--run-live` pytest flag; never run in CI
@@ -29,22 +45,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 - `getAncestors` API action is deprecated by WikiTree; live tests now use `getPeople` with `ancestors=1` instead
-
-## [0.1.0] - Initial Release
-
-### Added
-
-- Initial release with 10 WikiTree API tools
-- `get_profile` — retrieve person or free-space profile
-- `get_person` — retrieve person profile
-- `get_people` — fetch multiple profiles by keys
-- `search_person` — search profiles by criteria
-- `get_ancestors` — get ancestral tree
-- `get_descendants` — get descendant tree
-- `get_relatives` — get parents, children, siblings, spouses
-- `get_bio` — retrieve biography text
-- `get_photos` — get photos linked to a profile
-- `get_categories` — retrieve associated categories
-- HTTP client with retry, timeout, and exponential backoff
-- Docker support (multi-stage build)
-- GitHub Actions CI pipeline
