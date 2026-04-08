@@ -68,5 +68,5 @@ Tools extract the client from MCP lifespan context via `ctx.request_context.life
 
 ## CI
 
-GitHub Actions pipeline: install → lint → type-check → test (mocked only).
+GitLab CI pipeline (`.gitlab-ci.yml`): install, lint, type-check, test (mocked only).
 Live tests never run in CI.

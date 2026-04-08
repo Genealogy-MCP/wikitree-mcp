@@ -2,6 +2,8 @@
 
 MCP server exposing [WikiTree's](https://www.wikitree.com/) genealogy API as tools for Claude Desktop and Claude Code. Public profiles only — no authentication required.
 
+**Note:** GitHub is a read-only mirror. Development happens on [GitLab](https://gitlab.com/genealogy-mcp/wikitree-mcp).
+
 ## Available Tools
 
 | Tool | Description |
