@@ -40,6 +40,7 @@ from .tools.profiles import (
     get_profile_handler,
     search_person_handler,
 )
+from .tools.watchlist import get_watchlist_handler
 
 # ---------------------------------------------------------------------------
 # Pydantic parameter models
@@ -153,6 +154,23 @@ class ConnectedProfilesByDNAParams(BaseModel):
             "DNA test ID (1=23andMe, 2=AncestryDNA, 6=FTDNA Family Finder, 12=MyHeritage, etc.)"
         ),
     )
+
+
+class GetWatchlistParams(BaseModel):
+    """Parameters for the get_watchlist operation (all optional)."""
+
+    limit: int | None = Field(None, description="Max results (default: 100)")
+    offset: int | None = Field(None, description="Starting offset")
+    order: str | None = Field(
+        None,
+        description="Sort order: user_id, user_name, page_touched, etc.",
+    )
+    get_person: int | None = Field(None, description="Set to 1 to include person profiles")
+    get_space: int | None = Field(None, description="Set to 1 to include space profiles")
+    only_living: int | None = Field(None, description="Set to 1 to filter to living persons")
+    exclude_living: int | None = Field(None, description="Set to 1 to exclude living persons")
+    fields: str | None = Field(None, description="Comma-separated list of fields to return")
+    bio_format: str | None = Field(None, description="'wiki', 'html', or 'both'")
 
 
 # ---------------------------------------------------------------------------
@@ -361,6 +379,21 @@ OPERATION_REGISTRY: dict[str, OperationEntry] = {
         category="dna",
         params_schema=DNAKeyParams,
         handler=get_connected_dna_tests_handler,
+        read_only=True,
+        destructive=False,
+    ),
+    # --- watchlist (1, requires auth) ---
+    "get_watchlist": OperationEntry(
+        name="get_watchlist",
+        summary="Get the authenticated user's watchlist",
+        description=(
+            "Get profiles on the logged-in user's watchlist. "
+            "Requires WIKITREE_EMAIL and WIKITREE_PASSWORD to be set. "
+            "Supports pagination, filtering, and sort order."
+        ),
+        category="watchlist",
+        params_schema=GetWatchlistParams,
+        handler=get_watchlist_handler,
         read_only=True,
         destructive=False,
     ),

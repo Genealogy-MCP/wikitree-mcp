@@ -83,3 +83,91 @@ async def test_call_fails_after_max_retries(mock_api: respx.MockRouter) -> None:
 
 async def test_close(client: WikiTreeClient) -> None:
     await client.close()
+
+
+async def test_login_success(mock_api: respx.MockRouter) -> None:
+    settings = Settings(
+        app_id="test-app",
+        email="user@example.com",
+        password="secret",
+    )
+    client = WikiTreeClient(settings)
+    mock_api.post("https://api.wikitree.com/api.php").side_effect = [
+        httpx.Response(
+            302,
+            headers={"Location": "https://www.wikitree.com/?authcode=ABC123"},
+        ),
+        httpx.Response(
+            200,
+            json={"clientLogin": {"result": "success", "username": "User-1"}},
+        ),
+    ]
+    await client.login()
+    assert client.is_authenticated is True
+
+
+async def test_login_failure(mock_api: respx.MockRouter) -> None:
+    settings = Settings(
+        app_id="test-app",
+        email="user@example.com",
+        password="wrong",
+    )
+    client = WikiTreeClient(settings)
+    mock_api.post("https://api.wikitree.com/api.php").respond(
+        200,
+        json={"clientLogin": {"result": "error", "message": "Invalid credentials"}},
+    )
+    with pytest.raises(WikiTreeApiError, match="Login failed"):
+        await client.login()
+    assert client.is_authenticated is False
+
+
+async def test_ensure_auth_no_credentials() -> None:
+    settings = Settings(app_id="test-app")
+    client = WikiTreeClient(settings)
+    with pytest.raises(
+        WikiTreeApiError,
+        match="WIKITREE_EMAIL and WIKITREE_PASSWORD not set",
+    ):
+        await client.ensure_auth()
+
+
+async def test_ensure_auth_already_authenticated(
+    mock_api: respx.MockRouter,
+) -> None:
+    settings = Settings(
+        app_id="test-app",
+        email="user@example.com",
+        password="secret",
+    )
+    client = WikiTreeClient(settings)
+    client._authenticated = True
+    await client.ensure_auth()
+    assert mock_api.calls.call_count == 0
+
+
+async def test_ensure_auth_triggers_login(
+    mock_api: respx.MockRouter,
+) -> None:
+    settings = Settings(
+        app_id="test-app",
+        email="user@example.com",
+        password="secret",
+    )
+    client = WikiTreeClient(settings)
+    mock_api.post("https://api.wikitree.com/api.php").side_effect = [
+        httpx.Response(
+            302,
+            headers={"Location": "https://www.wikitree.com/?authcode=XYZ"},
+        ),
+        httpx.Response(
+            200,
+            json={"clientLogin": {"result": "success", "username": "User-1"}},
+        ),
+    ]
+    await client.ensure_auth()
+    assert client.is_authenticated is True
+
+
+async def test_settings_property(client: WikiTreeClient) -> None:
+    assert client.settings.app_id == "test-app"
