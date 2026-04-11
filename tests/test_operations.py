@@ -16,8 +16,8 @@ from wikitree_mcp.operations import (
 # ---------------------------------------------------------------------------
 
 
-def test_registry_has_13_entries() -> None:
-    assert len(OPERATION_REGISTRY) == 13
+def test_registry_has_14_entries() -> None:
+    assert len(OPERATION_REGISTRY) == 14
 
 
 def test_all_operations_read_only() -> None:
@@ -48,7 +48,7 @@ def test_entry_names_match_keys() -> None:
 
 
 def test_valid_categories() -> None:
-    valid = {"search", "read", "analysis", "content", "dna"}
+    valid = {"search", "read", "analysis", "content", "dna", "watchlist"}
     for entry in OPERATION_REGISTRY.values():
         assert entry.category in valid, f"{entry.name} has invalid category '{entry.category}'"
 
@@ -223,3 +223,11 @@ def test_connected_profiles_params_requires_key_and_dna_id() -> None:
 
     result = ConnectedProfilesByDNAParams(key="Whitten-1", dna_id=1)
     assert result.dna_id == 1
+
+
+def test_get_watchlist_params_all_optional() -> None:
+    from wikitree_mcp.operations import GetWatchlistParams
+
+    result = GetWatchlistParams()
+    assert result.limit is None
+    assert result.order is None

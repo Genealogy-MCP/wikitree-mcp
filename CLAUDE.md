@@ -53,16 +53,17 @@ src/wikitree_mcp/
     genealogy.py    # 3 handlers: get_ancestors, get_descendants, get_relatives
     content.py      # 3 handlers: get_bio, get_photos, get_categories
     dna.py          # 3 handlers: get_dna_tests, get_connected_profiles, get_connected_dna_tests
+    watchlist.py    # 1 handler: get_watchlist (requires auth)
 ```
 
-### Tools (2 meta-tools, 13 operations)
+### Tools (2 meta-tools, 14 operations)
 
 Tools: `search` (operation discovery), `execute` (operation dispatch)
 
 Operations: `get_profile`, `get_person`, `get_people`, `search_person`,
 `get_ancestors`, `get_descendants`, `get_relatives`, `get_bio`, `get_photos`,
 `get_categories`, `get_dna_tests`, `get_connected_profiles`,
-`get_connected_dna_tests`
+`get_connected_dna_tests`, `get_watchlist`
 
 ### Data Flow
 
@@ -89,6 +90,8 @@ context and passes it to handlers. Handlers never see `ctx`.
 | `WIKITREE_API_BASE_URL` | `https://api.wikitree.com/api.php` | |
 | `WIKITREE_HTTP_TIMEOUT` | `10.0` | seconds |
 | `WIKITREE_MAX_RETRIES` | `3` | exponential backoff with jitter |
+| `WIKITREE_EMAIL` | (none) | Optional; enables auth for watchlist + private DNA |
+| `WIKITREE_PASSWORD` | (none) | Optional; required with EMAIL for auth |
 
 ## WikiTree API Quirks
 

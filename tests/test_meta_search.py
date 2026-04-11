@@ -22,7 +22,7 @@ async def test_search_keyword_match() -> None:
 async def test_search_no_match_lists_all() -> None:
     result = await search_operations_tool({"query": "xyznonexistent"})
     assert len(result) == 1
-    assert "13 operations available" in result[0].text
+    assert "14 operations available" in result[0].text
 
 
 async def test_search_category_filter() -> None:
