@@ -82,11 +82,19 @@ class SearchPersonParams(BaseModel):
     fields: str | None = Field(None, description="Comma-separated list of fields to return")
 
 
-class AncestorDescendantParams(BaseModel):
-    """Parameters for get_ancestors and get_descendants operations."""
+class GetAncestorsParams(BaseModel):
+    """Parameters for get_ancestors operation (uses getPeople internally)."""
 
     key: str = Field(..., description="WikiTree ID or page name (e.g. 'Clemens-1')")
-    depth: int = Field(..., description="Number of generations to retrieve")
+    depth: int = Field(..., description="Number of ancestor generations to retrieve")
+    fields: str | None = Field(None, description="Comma-separated list of fields to return")
+
+
+class GetDescendantsParams(BaseModel):
+    """Parameters for get_descendants operation."""
+
+    key: str = Field(..., description="WikiTree ID or page name (e.g. 'Clemens-1')")
+    depth: int = Field(..., description="Number of descendant generations to retrieve")
     fields: str | None = Field(None, description="Comma-separated list of fields to return")
     bio_format: str | None = Field(None, description="'wiki', 'html', or 'both'")
 
@@ -234,10 +242,11 @@ OPERATION_REGISTRY: dict[str, OperationEntry] = {
         summary="Get ancestor tree (parents, grandparents, etc.)",
         description=(
             "Get ancestor tree for a person. Returns parents, grandparents, etc. "
-            "up to the specified depth."
+            "up to the specified depth. Uses getPeople API internally "
+            "(getAncestors is deprecated)."
         ),
         category="analysis",
-        params_schema=AncestorDescendantParams,
+        params_schema=GetAncestorsParams,
         handler=get_ancestors_handler,
         read_only=True,
         destructive=False,
@@ -251,7 +260,7 @@ OPERATION_REGISTRY: dict[str, OperationEntry] = {
             "up to the specified depth."
         ),
         category="analysis",
-        params_schema=AncestorDescendantParams,
+        params_schema=GetDescendantsParams,
         handler=get_descendants_handler,
         read_only=True,
         destructive=False,

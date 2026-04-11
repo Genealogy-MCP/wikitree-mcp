@@ -54,6 +54,19 @@ async def test_execute_search_person(live_client: WikiTreeClient) -> None:
     assert len(data) >= 1
 
 
+async def test_execute_get_ancestors(live_client: WikiTreeClient) -> None:
+    result = await execute_operation_tool(
+        {
+            "operation": "get_ancestors",
+            "params": {"key": "Clemens-1", "depth": 1, "fields": "Id,Name"},
+        },
+        live_client,
+    )
+    data = json.loads(result[0].text)
+    people = data[0].get("people", {})
+    assert len(people) >= 2
+
+
 async def test_execute_get_people(live_client: WikiTreeClient) -> None:
     result = await execute_operation_tool(
         {
