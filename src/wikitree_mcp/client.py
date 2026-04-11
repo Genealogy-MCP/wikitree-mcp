@@ -71,13 +71,9 @@ class WikiTreeClient:
         )
 
         if step1.status_code != 302 or "Location" not in step1.headers:
-            body: dict[str, Any] = (
-                step1.json() if step1.status_code == 200 else {}
-            )
+            body: dict[str, Any] = step1.json() if step1.status_code == 200 else {}
             login_info: dict[str, Any] = body.get("clientLogin", {})
-            detail: str = login_info.get(
-                "message", "no redirect received"
-            )
+            detail: str = login_info.get("message", "no redirect received")
             raise WikiTreeApiError(f"Login failed: {detail}")
 
         location = step1.headers["Location"]
