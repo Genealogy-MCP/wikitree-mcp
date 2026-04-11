@@ -150,8 +150,7 @@ class ConnectedProfilesByDNAParams(BaseModel):
     dna_id: int = Field(
         ...,
         description=(
-            "DNA test ID (1=23andMe, 2=AncestryDNA, "
-            "6=FTDNA Family Finder, 12=MyHeritage, etc.)"
+            "DNA test ID (1=23andMe, 2=AncestryDNA, 6=FTDNA Family Finder, 12=MyHeritage, etc.)"
         ),
     )
 

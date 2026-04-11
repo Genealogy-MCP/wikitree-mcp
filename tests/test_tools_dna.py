@@ -50,9 +50,7 @@ async def test_get_connected_profiles_by_dna_test(
             "connections": [{"Id": "13654071", "Name": "Whitten-1205"}],
         }
     ]
-    result = await get_connected_profiles_handler(
-        {"key": "Whitten-1", "dna_id": 1}, mock_client
-    )
+    result = await get_connected_profiles_handler({"key": "Whitten-1", "dna_id": 1}, mock_client)
     mock_client.call.assert_called_once_with(
         "getConnectedProfilesByDNATest",
         key="Whitten-1",
@@ -75,9 +73,7 @@ async def test_get_connected_dna_tests_by_profile(
             "dnaTests": [{"dna_id": "1", "taker": {"Name": "Whitten-1"}}],
         }
     ]
-    result = await get_connected_dna_tests_handler(
-        {"key": "Whitten-1"}, mock_client
-    )
+    result = await get_connected_dna_tests_handler({"key": "Whitten-1"}, mock_client)
     mock_client.call.assert_called_once_with(
         "getConnectedDNATestsByProfile",
         key="Whitten-1",

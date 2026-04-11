@@ -61,9 +61,7 @@ async def get_connected_profiles_handler(
             dna_id=params["dna_id"],
         )
     except WikiTreeApiError as e:
-        raise_tool_error(
-            e, "get_connected_profiles", identifier=params["key"]
-        )
+        raise_tool_error(e, "get_connected_profiles", identifier=params["key"])
     return [TextContent(type="text", text=json.dumps(result, indent=2))]
 
 
@@ -86,7 +84,5 @@ async def get_connected_dna_tests_handler(
             key=params["key"],
         )
     except WikiTreeApiError as e:
-        raise_tool_error(
-            e, "get_connected_dna_tests", identifier=params["key"]
-        )
+        raise_tool_error(e, "get_connected_dna_tests", identifier=params["key"])
     return [TextContent(type="text", text=json.dumps(result, indent=2))]
