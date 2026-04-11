@@ -154,13 +154,23 @@ def test_search_person_params_all_optional() -> None:
     assert result.first_name is None
 
 
-def test_ancestor_descendant_params_requires_key_and_depth() -> None:
-    from wikitree_mcp.operations import AncestorDescendantParams
+def test_get_ancestors_params_requires_key_and_depth() -> None:
+    from wikitree_mcp.operations import GetAncestorsParams
 
     with pytest.raises(ValueError):
-        AncestorDescendantParams()  # type: ignore[call-arg]
+        GetAncestorsParams()  # type: ignore[call-arg]
 
-    result = AncestorDescendantParams(key="Clemens-1", depth=3)
+    result = GetAncestorsParams(key="Clemens-1", depth=3)
+    assert result.depth == 3
+
+
+def test_get_descendants_params_requires_key_and_depth() -> None:
+    from wikitree_mcp.operations import GetDescendantsParams
+
+    with pytest.raises(ValueError):
+        GetDescendantsParams()  # type: ignore[call-arg]
+
+    result = GetDescendantsParams(key="Clemens-1", depth=3)
     assert result.depth == 3
 
 

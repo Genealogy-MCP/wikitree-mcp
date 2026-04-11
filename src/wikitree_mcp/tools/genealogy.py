@@ -24,8 +24,10 @@ async def get_ancestors_handler(
 ) -> list[TextContent]:
     """Get ancestor tree (parents, grandparents, etc.) from WikiTree.
 
+    Uses getPeople with ancestors param (getAncestors is deprecated).
+
     Args:
-        params: Validated parameters (key, depth, fields, bio_format).
+        params: Validated parameters (key, depth, fields).
         client: WikiTree API client.
 
     Returns:
@@ -33,11 +35,10 @@ async def get_ancestors_handler(
     """
     try:
         result = await client.call(
-            "getAncestors",
-            key=params["key"],
-            depth=params["depth"],
+            "getPeople",
+            keys=params["key"],
+            ancestors=params["depth"],
             fields=params.get("fields"),
-            bioFormat=params.get("bio_format"),
         )
     except WikiTreeApiError as e:
         raise_tool_error(e, "get_ancestors", identifier=params["key"])
