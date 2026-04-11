@@ -81,6 +81,32 @@ async def test_get_connected_dna_tests_by_profile(
     assert len(result) == 1
 
 
+async def test_get_dna_tests_with_auth() -> None:
+    from unittest.mock import PropertyMock
+
+    from wikitree_mcp.tools.dna import get_dna_tests_handler
+
+    client = AsyncMock(spec=WikiTreeClient)
+    client.call.return_value = [{"status": 0, "dnaTests": []}]
+    type(client).settings = PropertyMock(return_value=type("S", (), {"has_credentials": True})())
+    client.ensure_auth = AsyncMock()
+    await get_dna_tests_handler({"key": "X-1"}, client)
+    client.ensure_auth.assert_awaited_once()
+
+
+async def test_get_dna_tests_without_auth() -> None:
+    from unittest.mock import PropertyMock
+
+    from wikitree_mcp.tools.dna import get_dna_tests_handler
+
+    client = AsyncMock(spec=WikiTreeClient)
+    client.call.return_value = [{"status": 0, "dnaTests": []}]
+    type(client).settings = PropertyMock(return_value=type("S", (), {"has_credentials": False})())
+    client.ensure_auth = AsyncMock()
+    await get_dna_tests_handler({"key": "X-1"}, client)
+    client.ensure_auth.assert_not_awaited()
+
+
 async def test_get_dna_tests_api_error(
     mock_client: AsyncMock,
 ) -> None:

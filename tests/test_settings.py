@@ -26,3 +26,18 @@ def test_settings_custom_values() -> None:
 def test_settings_default_app_id() -> None:
     s = Settings()
     assert s.app_id == "Genealogy-MCP_wikitree-mcp"
+
+
+def test_has_credentials_both_set() -> None:
+    s = Settings(email="user@example.com", password="secret")
+    assert s.has_credentials is True
+
+
+def test_has_credentials_missing() -> None:
+    s = Settings()
+    assert s.has_credentials is False
+
+
+def test_has_credentials_partial() -> None:
+    s = Settings(email="user@example.com")
+    assert s.has_credentials is False

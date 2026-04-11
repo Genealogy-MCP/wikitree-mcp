@@ -31,6 +31,8 @@ async def get_dna_tests_handler(
     Returns:
         List of TextContent with JSON-formatted DNA test data.
     """
+    if client.settings.has_credentials:
+        await client.ensure_auth()
     try:
         result = await client.call(
             "getDNATestsByTestTaker",
@@ -54,6 +56,8 @@ async def get_connected_profiles_handler(
     Returns:
         List of TextContent with JSON-formatted connection data.
     """
+    if client.settings.has_credentials:
+        await client.ensure_auth()
     try:
         result = await client.call(
             "getConnectedProfilesByDNATest",
@@ -78,6 +82,8 @@ async def get_connected_dna_tests_handler(
     Returns:
         List of TextContent with JSON-formatted DNA test data.
     """
+    if client.settings.has_credentials:
+        await client.ensure_auth()
     try:
         result = await client.call(
             "getConnectedDNATestsByProfile",
