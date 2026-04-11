@@ -1,7 +1,7 @@
 [project]
 name = "wikitree-mcp"
-version = "0.1.0"
-description = "MCP server exposing WikiTree's genealogy API as tools for Claude"
+version = "2.0.0"
+description = "MCP server exposing WikiTree's genealogy API via Code Mode architecture"
 readme = "README.md"
 license = "AGPL-3.0-only"
 requires-python = ">=3.10"

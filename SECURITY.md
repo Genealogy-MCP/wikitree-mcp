@@ -6,7 +6,8 @@ Only the current release receives security fixes. No LTS versions are maintained
 
 | Version | Supported |
 | ------- | --------- |
-| 0.1.x   | Yes       |
+| 2.0.x   | Yes       |
+| < 2.0   | No        |
 
 ## Reporting a Vulnerability
 
