@@ -24,6 +24,11 @@ from .tools.content import (
     get_categories_handler,
     get_photos_handler,
 )
+from .tools.dna import (
+    get_connected_dna_tests_handler,
+    get_connected_profiles_handler,
+    get_dna_tests_handler,
+)
 from .tools.genealogy import (
     get_ancestors_handler,
     get_descendants_handler,
@@ -130,6 +135,25 @@ class GetCategoriesParams(BaseModel):
     """Parameters for the get_categories operation."""
 
     key: str = Field(..., description="WikiTree ID or page name (e.g. 'Clemens-1')")
+
+
+class DNAKeyParams(BaseModel):
+    """Parameters for DNA operations that take only a profile key."""
+
+    key: str = Field(..., description="WikiTree ID or page name (e.g. 'Whitten-1')")
+
+
+class ConnectedProfilesByDNAParams(BaseModel):
+    """Parameters for get_connected_profiles_by_dna_test."""
+
+    key: str = Field(..., description="WikiTree ID of the DNA test taker")
+    dna_id: int = Field(
+        ...,
+        description=(
+            "DNA test ID (1=23andMe, 2=AncestryDNA, "
+            "6=FTDNA Family Finder, 12=MyHeritage, etc.)"
+        ),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -298,6 +322,46 @@ OPERATION_REGISTRY: dict[str, OperationEntry] = {
         category="content",
         params_schema=GetCategoriesParams,
         handler=get_categories_handler,
+        read_only=True,
+        destructive=False,
+    ),
+    # --- dna (3) ---
+    "get_dna_tests": OperationEntry(
+        name="get_dna_tests",
+        summary="Get DNA tests taken by a profile",
+        description=(
+            "Get DNA tests taken by a WikiTree profile. Returns test type, "
+            "provider, haplogroups, and assignment details."
+        ),
+        category="dna",
+        params_schema=DNAKeyParams,
+        handler=get_dna_tests_handler,
+        read_only=True,
+        destructive=False,
+    ),
+    "get_connected_profiles": OperationEntry(
+        name="get_connected_profiles",
+        summary="Get profiles connected via a DNA test",
+        description=(
+            "Get profiles connected to a test-taker through a specific "
+            "DNA test. Requires the test taker's key and the DNA test ID."
+        ),
+        category="dna",
+        params_schema=ConnectedProfilesByDNAParams,
+        handler=get_connected_profiles_handler,
+        read_only=True,
+        destructive=False,
+    ),
+    "get_connected_dna_tests": OperationEntry(
+        name="get_connected_dna_tests",
+        summary="Get DNA tests connected to a profile",
+        description=(
+            "Get test-taker profiles and their DNA tests connected to a "
+            "given profile (inverse of get_connected_profiles)."
+        ),
+        category="dna",
+        params_schema=DNAKeyParams,
+        handler=get_connected_dna_tests_handler,
         read_only=True,
         destructive=False,
     ),
