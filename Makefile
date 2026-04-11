@@ -1,4 +1,4 @@
-.PHONY: help install test test-live lint format type-check check-headers check build clean
+.PHONY: help install test test-live lint format typecheck check-headers audit ci build clean run run-stdio
 
 .DEFAULT_GOAL := help
 
@@ -20,17 +20,27 @@ lint: ## Lint source and tests
 
 format: ## Auto-format source and tests
 	uv run ruff format src tests
+	uv run ruff check --fix src tests
 
-type-check: ## Run static type checker
-	uv run pyright
+typecheck: ## Run static type checker
+	uv run pyright src
 
 check-headers: ## Check AGPL copyright headers
-	find src/ scripts/ tests/ -name '*.py' -exec uv run python scripts/check_copyright_header.py {} +
+	find src/ scripts/ -name '*.py' -exec uv run python scripts/check_copyright_header.py {} +
 
-check: lint type-check check-headers test ## Run lint + type-check + headers + test
+audit: ## Run security audit
+	uv run pip-audit
+
+ci: lint typecheck check-headers test audit ## Run full CI pipeline locally
 
 build: ## Build wheel
 	uv build
+
+run: ## Run with streamable-http transport on port 8000
+	uv run wikitree-mcp --transport streamable-http --host 127.0.0.1 --port 8000
+
+run-stdio: ## Run with stdio transport
+	uv run wikitree-mcp
 
 clean: ## Remove build artifacts and caches
 	rm -rf dist build .pytest_cache .ruff_cache .coverage htmlcov

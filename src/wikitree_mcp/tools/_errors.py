@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 Federico Castagnini
+"""Shared error handling for MCP tool responses.
+
+MCP-8: Tool execution errors MUST be returned with isError=True so the LLM
+can distinguish errors from valid data and self-correct.
+
+MCP-10: This is the single source of truth for error formatting.
+"""
+
+from __future__ import annotations
+
+import logging
+from typing import NoReturn
+
+from ..client import WikiTreeApiError
+
+logger = logging.getLogger(__name__)
+
+
+class McpToolError(Exception):
+    """Raised by tool handlers to signal an error to the LLM.
+
+    The MCP Server SDK catches exceptions from tool handlers and wraps them
+    in CallToolResult with isError=True.
+    """
+
+
+def raise_tool_error(
+    error: Exception,
+    operation: str,
+    *,
+    identifier: str | None = None,
+) -> NoReturn:
+    """Log and re-raise an exception as McpToolError.
+
+    Args:
+        error: The original exception.
+        operation: Name of the failed operation (e.g. "get_profile").
+        identifier: Optional WikiTree ID for context.
+
+    Raises:
+        McpToolError: Always raised with a formatted error message.
+    """
+    if isinstance(error, (WikiTreeApiError, McpToolError)):
+        error_msg = str(error)
+    else:
+        error_msg = f"Unexpected error during {operation}: {error}"
+
+    if identifier:
+        error_msg += f" [id: {identifier}]"
+
+    logger.error("Tool error in %s: %s", operation, error_msg)
+    raise McpToolError(error_msg) from error

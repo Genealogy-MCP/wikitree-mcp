@@ -1,23 +1,32 @@
 # wikitree-mcp
 
-MCP server exposing [WikiTree's](https://www.wikitree.com/) genealogy API as tools for Claude Desktop and Claude Code. Public profiles only — no authentication required.
+MCP server exposing [WikiTree's](https://www.wikitree.com/) genealogy API via the Code Mode architecture. Public profiles only — no authentication required.
 
 **Note:** GitHub is a read-only mirror. Development happens on [GitLab](https://gitlab.com/genealogy-mcp/wikitree-mcp).
 
-## Available Tools
+## Architecture
+
+This server uses 2 meta-tools (`search` + `execute`) with 10 operations in a server-side registry. The LLM discovers operations via `search` and runs them via `execute`.
 
 | Tool | Description |
 |---|---|
-| `get_profile` | Retrieve a person or free-space profile |
-| `get_person` | Retrieve a person profile (person profiles only) |
-| `get_people` | Fetch multiple profiles by keys or relationships |
-| `search_person` | Search profiles by name, dates, location, gender |
-| `get_ancestors` | Get ancestor tree (parents, grandparents, etc.) |
-| `get_descendants` | Get descendant tree (children, grandchildren, etc.) |
-| `get_relatives` | Get parents, children, siblings, spouses |
-| `get_bio` | Retrieve biography text |
-| `get_photos` | Get photos linked to a profile |
-| `get_categories` | Retrieve associated categories |
+| `search` | Discover available operations and their parameters |
+| `execute` | Run a named operation against the WikiTree API |
+
+### Operations
+
+| Operation | Category | Description |
+|---|---|---|
+| `get_profile` | read | Retrieve a person or free-space profile |
+| `get_person` | read | Retrieve a person profile (person profiles only) |
+| `get_people` | read | Fetch multiple profiles by keys or relationships |
+| `search_person` | search | Search profiles by name, dates, location, gender |
+| `get_ancestors` | analysis | Get ancestor tree (parents, grandparents, etc.) |
+| `get_descendants` | analysis | Get descendant tree (children, grandchildren, etc.) |
+| `get_relatives` | read | Get parents, children, siblings, spouses |
+| `get_bio` | content | Retrieve biography text |
+| `get_photos` | content | Get photos linked to a profile |
+| `get_categories` | content | Retrieve associated categories |
 
 ## Configuration
 
@@ -84,25 +93,16 @@ claude mcp add wikitree -- docker run -i --rm -e WIKITREE_APP_ID=your-app-id wik
 ## Development
 
 ```bash
-# Install dependencies
-make install
-
-# Run tests with coverage (mocked, no network)
-make test
-
-# Run live tests against the real WikiTree API
-make test-live
-
-# Run all checks (lint + type-check + test)
-make check
-
-# Format code
-make format
-
-# Build wheel
-make build
+make install       # Install dependencies
+make test          # Run tests with coverage (mocked, no network)
+make test-live     # Run live tests against real WikiTree API
+make ci            # Full CI pipeline (lint + typecheck + test + audit)
+make format        # Auto-format code
+make build         # Build wheel
+make run           # Run with streamable-http on port 8000
+make run-stdio     # Run with stdio transport
 ```
 
 ## License
 
-MIT
+AGPL-3.0-only

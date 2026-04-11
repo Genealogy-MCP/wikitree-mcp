@@ -1,96 +1,98 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # Copyright (C) 2026 Federico Castagnini
+"""Genealogy operation handlers for WikiTree API.
+
+Each handler takes a validated params dict and a WikiTreeClient,
+performs the API call, and returns a list of TextContent.
+"""
+
 from __future__ import annotations
 
+import json
 from typing import Any
 
-from mcp.server.fastmcp import Context, FastMCP
+from mcp.types import TextContent
 
-from wikitree_mcp.client import WikiTreeClient
+from wikitree_mcp.client import WikiTreeApiError, WikiTreeClient
 
-
-def _get_client(ctx: Context[Any, Any, Any]) -> WikiTreeClient:
-    return ctx.request_context.lifespan_context.client  # type: ignore[no-any-return]
+from ._errors import raise_tool_error
 
 
-def register(mcp: FastMCP) -> None:
-    @mcp.tool()
-    async def get_ancestors(
-        ctx: Context[Any, Any, Any],
-        key: str,
-        depth: int,
-        fields: str | None = None,
-        bio_format: str | None = None,
-    ) -> list[dict[str, Any]]:
-        """Get ancestor tree (parents, grandparents, etc.) from WikiTree.
+async def get_ancestors_handler(
+    params: dict[str, Any],
+    client: WikiTreeClient,
+) -> list[TextContent]:
+    """Get ancestor tree (parents, grandparents, etc.) from WikiTree.
 
-        Args:
-            key: WikiTree ID or page name (e.g. "Clemens-1")
-            depth: Number of ancestor generations to retrieve (1=parents, 2=grandparents, etc.)
-            fields: Comma-separated list of fields to return
-            bio_format: "wiki", "html", or "both"
-        """
-        client = _get_client(ctx)
-        return await client.call(
+    Args:
+        params: Validated parameters (key, depth, fields, bio_format).
+        client: WikiTree API client.
+
+    Returns:
+        List of TextContent with JSON-formatted ancestor data.
+    """
+    try:
+        result = await client.call(
             "getAncestors",
-            key=key,
-            depth=depth,
-            fields=fields,
-            bioFormat=bio_format,
+            key=params["key"],
+            depth=params["depth"],
+            fields=params.get("fields"),
+            bioFormat=params.get("bio_format"),
         )
+    except WikiTreeApiError as e:
+        raise_tool_error(e, "get_ancestors", identifier=params["key"])
+    return [TextContent(type="text", text=json.dumps(result, indent=2))]
 
-    @mcp.tool()
-    async def get_descendants(
-        ctx: Context[Any, Any, Any],
-        key: str,
-        depth: int,
-        fields: str | None = None,
-        bio_format: str | None = None,
-    ) -> list[dict[str, Any]]:
-        """Get descendant tree (children, grandchildren, etc.) from WikiTree.
 
-        Args:
-            key: WikiTree ID or page name (e.g. "Clemens-1")
-            depth: Number of descendant generations to retrieve
-            fields: Comma-separated list of fields to return
-            bio_format: "wiki", "html", or "both"
-        """
-        client = _get_client(ctx)
-        return await client.call(
+async def get_descendants_handler(
+    params: dict[str, Any],
+    client: WikiTreeClient,
+) -> list[TextContent]:
+    """Get descendant tree (children, grandchildren, etc.) from WikiTree.
+
+    Args:
+        params: Validated parameters (key, depth, fields, bio_format).
+        client: WikiTree API client.
+
+    Returns:
+        List of TextContent with JSON-formatted descendant data.
+    """
+    try:
+        result = await client.call(
             "getDescendants",
-            key=key,
-            depth=depth,
-            fields=fields,
-            bioFormat=bio_format,
+            key=params["key"],
+            depth=params["depth"],
+            fields=params.get("fields"),
+            bioFormat=params.get("bio_format"),
         )
+    except WikiTreeApiError as e:
+        raise_tool_error(e, "get_descendants", identifier=params["key"])
+    return [TextContent(type="text", text=json.dumps(result, indent=2))]
 
-    @mcp.tool()
-    async def get_relatives(
-        ctx: Context[Any, Any, Any],
-        keys: str,
-        fields: str | None = None,
-        get_parents: int | None = None,
-        get_children: int | None = None,
-        get_siblings: int | None = None,
-        get_spouses: int | None = None,
-    ) -> list[dict[str, Any]]:
-        """Get relatives (parents, children, siblings, spouses) for one or more profiles.
 
-        Args:
-            keys: Comma-separated WikiTree IDs (e.g. "Clemens-1,Twain-1")
-            fields: Comma-separated list of fields to return
-            get_parents: Set to 1 to include parents
-            get_children: Set to 1 to include children
-            get_siblings: Set to 1 to include siblings
-            get_spouses: Set to 1 to include spouses
-        """
-        client = _get_client(ctx)
-        return await client.call(
+async def get_relatives_handler(
+    params: dict[str, Any],
+    client: WikiTreeClient,
+) -> list[TextContent]:
+    """Get relatives (parents, children, siblings, spouses) for profiles.
+
+    Args:
+        params: Validated parameters (keys, fields, get_parents, etc.).
+        client: WikiTree API client.
+
+    Returns:
+        List of TextContent with JSON-formatted relatives data.
+    """
+    try:
+        result = await client.call(
             "getRelatives",
-            keys=keys,
-            fields=fields,
-            getParents=get_parents,
-            getChildren=get_children,
-            getSiblings=get_siblings,
-            getSpouses=get_spouses,
+            keys=params["keys"],
+            fields=params.get("fields"),
+            getParents=params.get("get_parents"),
+            getChildren=params.get("get_children"),
+            getSiblings=params.get("get_siblings"),
+            getSpouses=params.get("get_spouses"),
         )
+    except WikiTreeApiError as e:
+        raise_tool_error(e, "get_relatives", identifier=params["keys"])
+    return [TextContent(type="text", text=json.dumps(result, indent=2))]
