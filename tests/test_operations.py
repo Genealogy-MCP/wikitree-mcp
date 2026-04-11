@@ -16,8 +16,8 @@ from wikitree_mcp.operations import (
 # ---------------------------------------------------------------------------
 
 
-def test_registry_has_10_entries() -> None:
-    assert len(OPERATION_REGISTRY) == 10
+def test_registry_has_13_entries() -> None:
+    assert len(OPERATION_REGISTRY) == 13
 
 
 def test_all_operations_read_only() -> None:
@@ -48,7 +48,7 @@ def test_entry_names_match_keys() -> None:
 
 
 def test_valid_categories() -> None:
-    valid = {"search", "read", "analysis", "content"}
+    valid = {"search", "read", "analysis", "content", "dna"}
     for entry in OPERATION_REGISTRY.values():
         assert entry.category in valid, f"{entry.name} has invalid category '{entry.category}'"
 
@@ -200,3 +200,26 @@ def test_get_categories_params_requires_key() -> None:
 
     with pytest.raises(ValueError):
         GetCategoriesParams()  # type: ignore[call-arg]
+
+
+def test_dna_key_params_requires_key() -> None:
+    from wikitree_mcp.operations import DNAKeyParams
+
+    with pytest.raises(ValueError):
+        DNAKeyParams()  # type: ignore[call-arg]
+
+    result = DNAKeyParams(key="Whitten-1")
+    assert result.key == "Whitten-1"
+
+
+def test_connected_profiles_params_requires_key_and_dna_id() -> None:
+    from wikitree_mcp.operations import ConnectedProfilesByDNAParams
+
+    with pytest.raises(ValueError):
+        ConnectedProfilesByDNAParams()  # type: ignore[call-arg]
+
+    with pytest.raises(ValueError):
+        ConnectedProfilesByDNAParams(key="Whitten-1")  # type: ignore[call-arg]
+
+    result = ConnectedProfilesByDNAParams(key="Whitten-1", dna_id=1)
+    assert result.dna_id == 1

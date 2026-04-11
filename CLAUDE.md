@@ -52,15 +52,17 @@ src/wikitree_mcp/
     profiles.py     # 4 handlers: get_profile, get_person, get_people, search_person
     genealogy.py    # 3 handlers: get_ancestors, get_descendants, get_relatives
     content.py      # 3 handlers: get_bio, get_photos, get_categories
+    dna.py          # 3 handlers: get_dna_tests, get_connected_profiles, get_connected_dna_tests
 ```
 
-### Tools (2 meta-tools, 10 operations)
+### Tools (2 meta-tools, 13 operations)
 
 Tools: `search` (operation discovery), `execute` (operation dispatch)
 
 Operations: `get_profile`, `get_person`, `get_people`, `search_person`,
 `get_ancestors`, `get_descendants`, `get_relatives`, `get_bio`, `get_photos`,
-`get_categories`
+`get_categories`, `get_dna_tests`, `get_connected_profiles`,
+`get_connected_dna_tests`
 
 ### Data Flow
 
