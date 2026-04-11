@@ -127,6 +127,23 @@ def register_tools(app: FastMCP) -> None:
 
 def create_server() -> FastMCP:
     """Create and configure the WikiTree MCP server."""
+    from wikitree_mcp.operations import OPERATION_REGISTRY
+
     mcp = FastMCP("WikiTree", lifespan=app_lifespan)
     register_tools(mcp)
+
+    @mcp.custom_route("/health", ["GET"])
+    async def health_check(request: Any) -> Any:
+        """Health check endpoint for Docker HEALTHCHECK."""
+        from starlette.responses import JSONResponse
+
+        return JSONResponse(
+            {
+                "status": "healthy",
+                "service": "WikiTree MCP Server",
+                "tools": len(_META_TOOLS),
+                "operations": len(OPERATION_REGISTRY),
+            }
+        )
+
     return mcp
