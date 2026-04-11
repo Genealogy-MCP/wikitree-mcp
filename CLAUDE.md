@@ -90,7 +90,7 @@ context and passes it to handlers. Handlers never see `ctx`.
 
 ## WikiTree API Quirks
 
-- **`getAncestors` is deprecated** — use `getPeople` with `ancestors=1` instead
+- **`getAncestors` is deprecated** — `get_ancestors` handler uses `getPeople` with `ancestors=depth` internally
 - **`getPeople` returns `status: ""`** (empty string) on success — not `0` or `"0"`
 - **`getProfile` response shape**: data lives under `result[0]["profile"]`
 - **`getPeople` response shape**: data lives under `result[0]["people"]` (dict keyed by Id)

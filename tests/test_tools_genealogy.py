@@ -22,17 +22,19 @@ def mock_client() -> AsyncMock:
 
 
 async def test_get_ancestors(mock_client: AsyncMock) -> None:
-    mock_client.call.return_value = [{"status": 0}]
+    mock_client.call.return_value = [
+        {"status": "", "people": {"1": {"Id": 1, "Name": "Clemens-1"}}}
+    ]
     result = await get_ancestors_handler({"key": "Clemens-1", "depth": 3}, mock_client)
     mock_client.call.assert_called_once_with(
-        "getAncestors",
-        key="Clemens-1",
-        depth=3,
+        "getPeople",
+        keys="Clemens-1",
+        ancestors=3,
         fields=None,
-        bioFormat=None,
     )
     assert len(result) == 1
-    assert json.loads(result[0].text) == [{"status": 0}]
+    parsed = json.loads(result[0].text)
+    assert parsed[0]["people"]["1"]["Name"] == "Clemens-1"
 
 
 async def test_get_descendants(mock_client: AsyncMock) -> None:
