@@ -1,12 +1,20 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # Copyright (C) 2026 Federico Castagnini
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from __future__ import annotations
+
+import json
+from unittest.mock import AsyncMock
 
 import pytest
 
-from wikitree_mcp.client import WikiTreeClient
-from wikitree_mcp.server import AppContext, create_server
+from wikitree_mcp.client import WikiTreeApiError, WikiTreeClient
+from wikitree_mcp.tools._errors import McpToolError
+from wikitree_mcp.tools.profiles import (
+    get_people_handler,
+    get_person_handler,
+    get_profile_handler,
+    search_person_handler,
+)
 
 
 @pytest.fixture
@@ -14,71 +22,36 @@ def mock_client() -> AsyncMock:
     return AsyncMock(spec=WikiTreeClient)
 
 
-@pytest.fixture
-def mock_ctx(mock_client: AsyncMock) -> MagicMock:
-    ctx = MagicMock()
-    ctx.request_context.lifespan_context = AppContext(client=mock_client)
-    return ctx
-
-
-@pytest.fixture
-def mcp() -> Any:
-    return create_server()
-
-
-def _find_tool(mcp: Any, name: str) -> Any:
-    for tool in mcp._tool_manager._tools.values():
-        if tool.name == name:
-            return tool
-    raise ValueError(f"Tool {name} not found")
-
-
-async def test_get_profile(mcp: Any, mock_ctx: MagicMock, mock_client: AsyncMock) -> None:
+async def test_get_profile(mock_client: AsyncMock) -> None:
     mock_client.call.return_value = [{"page_name": "Clemens-1", "status": 0}]
-    tool = _find_tool(mcp, "get_profile")
-    result = await tool.fn(
-        ctx=mock_ctx,
+    result = await get_profile_handler({"key": "Clemens-1", "fields": "Id,Name"}, mock_client)
+    mock_client.call.assert_called_once_with(
+        "getProfile",
         key="Clemens-1",
         fields="Id,Name",
-        bio_format=None,
-        resolve_redirect=None,
+        bioFormat=None,
+        resolveRedirect=None,
     )
-    mock_client.call.assert_called_once_with(
-        "getProfile", key="Clemens-1", fields="Id,Name", bioFormat=None, resolveRedirect=None
-    )
-    assert result == [{"page_name": "Clemens-1", "status": 0}]
+    assert len(result) == 1
+    assert json.loads(result[0].text) == [{"page_name": "Clemens-1", "status": 0}]
 
 
-async def test_get_person(mcp: Any, mock_ctx: MagicMock, mock_client: AsyncMock) -> None:
+async def test_get_person(mock_client: AsyncMock) -> None:
     mock_client.call.return_value = [{"page_name": "Clemens-1", "status": 0}]
-    tool = _find_tool(mcp, "get_person")
-    result = await tool.fn(
-        ctx=mock_ctx,
+    result = await get_person_handler({"key": "Clemens-1", "bio_format": "wiki"}, mock_client)
+    mock_client.call.assert_called_once_with(
+        "getPerson",
         key="Clemens-1",
         fields=None,
-        bio_format="wiki",
-        resolve_redirect=None,
+        bioFormat="wiki",
+        resolveRedirect=None,
     )
-    mock_client.call.assert_called_once_with(
-        "getPerson", key="Clemens-1", fields=None, bioFormat="wiki", resolveRedirect=None
-    )
-    assert result == [{"page_name": "Clemens-1", "status": 0}]
+    assert len(result) == 1
 
 
-async def test_get_people(mcp: Any, mock_ctx: MagicMock, mock_client: AsyncMock) -> None:
+async def test_get_people(mock_client: AsyncMock) -> None:
     mock_client.call.return_value = [{"status": 0}]
-    tool = _find_tool(mcp, "get_people")
-    result = await tool.fn(
-        ctx=mock_ctx,
-        keys="Clemens-1,Twain-1",
-        fields=None,
-        ancestors=2,
-        descendants=None,
-        siblings=None,
-        nuclear=None,
-        limit=None,
-        start=None,
-    )
+    result = await get_people_handler({"keys": "Clemens-1,Twain-1", "ancestors": 2}, mock_client)
     mock_client.call.assert_called_once_with(
         "getPeople",
         keys="Clemens-1,Twain-1",
@@ -90,23 +63,14 @@ async def test_get_people(mcp: Any, mock_ctx: MagicMock, mock_client: AsyncMock)
         limit=None,
         start=None,
     )
-    assert result == [{"status": 0}]
+    assert len(result) == 1
 
 
-async def test_search_person(mcp: Any, mock_ctx: MagicMock, mock_client: AsyncMock) -> None:
+async def test_search_person(mock_client: AsyncMock) -> None:
     mock_client.call.return_value = [{"status": 0}]
-    tool = _find_tool(mcp, "search_person")
-    result = await tool.fn(
-        ctx=mock_ctx,
-        first_name="Mark",
-        last_name="Twain",
-        birth_date=None,
-        death_date=None,
-        birth_location=None,
-        gender=None,
-        limit=10,
-        start=None,
-        fields=None,
+    result = await search_person_handler(
+        {"first_name": "Mark", "last_name": "Twain", "limit": 10},
+        mock_client,
     )
     mock_client.call.assert_called_once_with(
         "searchPerson",
@@ -120,4 +84,10 @@ async def test_search_person(mcp: Any, mock_ctx: MagicMock, mock_client: AsyncMo
         start=None,
         fields=None,
     )
-    assert result == [{"status": 0}]
+    assert len(result) == 1
+
+
+async def test_get_profile_api_error(mock_client: AsyncMock) -> None:
+    mock_client.call.side_effect = WikiTreeApiError("Not found")
+    with pytest.raises(McpToolError, match="Not found"):
+        await get_profile_handler({"key": "Bad-1"}, mock_client)

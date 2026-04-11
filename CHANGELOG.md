@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-04-08
+
+### Changed
+
+- **BREAKING:** Replaced 10 individual tools with 2 meta-tools (`search` + `execute`) following the Code Mode architecture (MCP-ORG-1). The 10 operations are still available but are now accessed through the `execute` meta-tool with `{operation: "...", params: {...}}`.
+- Added `operations.py` at package root as the single source of truth for all operations (MCP-6)
+- Added `tools/_errors.py` with `McpToolError` + `raise_tool_error()` for consistent error handling (MCP-8, MCP-10)
+- Added `tools/meta_search.py` for operation discovery with keyword search and category filtering
+- Added `tools/meta_execute.py` for validated operation dispatch with close-match suggestions
+- Refactored handler modules (`profiles.py`, `genealogy.py`, `content.py`) from closures to standalone async functions
+- Added `.pre-commit-config.yaml` with ruff, file-length, emoji, and copyright-header hooks
+- Added `scripts/check_file_length.py` and `scripts/check_no_emojis.py` enforcement scripts
+- Aligned Makefile targets with org standard (`typecheck`, `ci`, `audit`, `run`, `run-stdio`)
+
+### Migration Guide
+
+If you were calling tools by name (e.g. `get_profile`), you now need to:
+1. Call `search` with `{"query": "profile"}` to discover the operation
+2. Call `execute` with `{"operation": "get_profile", "params": {"key": "Clemens-1"}}`
+
 ## [0.1.0] - 2026-03-19
 
 ### Added
