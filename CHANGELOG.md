@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Authentication support via `WIKITREE_EMAIL` + `WIKITREE_PASSWORD` env vars (opt-in, lazy)
+- `get_watchlist` operation — authenticated user's watchlist with pagination and filtering
+- 3 DNA tools: `get_dna_tests`, `get_connected_profiles`, `get_connected_dna_tests`
+- Authenticated DNA access — DNA handlers use auth session when credentials are configured
+- `/health` endpoint for Docker HEALTHCHECK
+- OCI labels, non-root user, EXPOSE 8000 in Dockerfile
+- `.only-mr` YAML anchor — lint/test/security jobs run only on MR pipelines
+
+### Fixed
+
+- `get_ancestors` now uses `getPeople` with `ancestors=depth` (deprecated `getAncestors` action)
+
+### Changed
+
+- Operation registry grows from 10 to 14 operations (DNA + watchlist)
+- CI: main branch pushes trigger only release detection pipeline
+
 ## [2.0.0] - 2026-04-08
 
 ### Changed
