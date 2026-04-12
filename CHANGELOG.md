@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Migrate CI pipeline to shared templates from facastagnini/ci-templates
+
+
 ### Added
 
 - Authentication support via `WIKITREE_EMAIL` + `WIKITREE_PASSWORD` env vars (opt-in, lazy)
