@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import pytest
+from mcp_codemode import search_operations, summarize_params
 from pydantic import BaseModel
 
 from wikitree_mcp.operations import (
     OPERATION_REGISTRY,
-    search_operations,
-    summarize_params,
+    ProfileKeyParams,
 )
 
 # ---------------------------------------------------------------------------
@@ -60,52 +60,50 @@ def test_token_warnings_on_analysis_ops() -> None:
 
 
 # ---------------------------------------------------------------------------
-# search_operations()
+# search_operations() (from mcp_codemode library)
 # ---------------------------------------------------------------------------
 
 
 def test_search_exact_name_match() -> None:
-    results = search_operations("get_profile")
+    results = search_operations("get_profile", OPERATION_REGISTRY)
     assert len(results) > 0
     assert results[0].name == "get_profile"
 
 
 def test_search_partial_token_match() -> None:
-    results = search_operations("ancestors")
+    results = search_operations("ancestors", OPERATION_REGISTRY)
     names = [r.name for r in results]
     assert "get_ancestors" in names
 
 
 def test_search_no_match_returns_empty() -> None:
-    results = search_operations("xyznonexistent")
+    results = search_operations("xyznonexistent", OPERATION_REGISTRY)
     assert results == []
 
 
 def test_search_category_filter() -> None:
-    results = search_operations("", category="analysis")
+    results = search_operations("", OPERATION_REGISTRY, category="analysis")
     names = [r.name for r in results]
     assert set(names) == {"get_ancestors", "get_descendants"}
 
 
 def test_search_category_filter_excludes_others() -> None:
-    results = search_operations("", category="search")
+    results = search_operations("", OPERATION_REGISTRY, category="search")
     for entry in results:
         assert entry.category == "search"
 
 
 def test_search_max_results() -> None:
-    results = search_operations("get", max_results=2)
+    results = search_operations("get", OPERATION_REGISTRY, max_results=2)
     assert len(results) <= 2
 
 
 # ---------------------------------------------------------------------------
-# summarize_params()
+# summarize_params() (from mcp_codemode library)
 # ---------------------------------------------------------------------------
 
 
 def test_summarize_params_required_and_optional() -> None:
-    from wikitree_mcp.operations import ProfileKeyParams
-
     summary = summarize_params(ProfileKeyParams)
     names = {p["name"] for p in summary}
     assert "key" in names
@@ -118,18 +116,12 @@ def test_summarize_params_required_and_optional() -> None:
         assert p["required"] is False
 
 
-def test_summarize_params_non_model_returns_empty() -> None:
-    assert summarize_params(str) == []
-
-
 # ---------------------------------------------------------------------------
 # Param model validation
 # ---------------------------------------------------------------------------
 
 
 def test_profile_key_params_requires_key() -> None:
-    from wikitree_mcp.operations import ProfileKeyParams
-
     with pytest.raises(ValueError):
         ProfileKeyParams()  # type: ignore[call-arg]
 

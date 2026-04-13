@@ -42,13 +42,11 @@ src/wikitree_mcp/
   __init__.py       # main() entry point + create_server()
   __main__.py       # python -m wikitree_mcp
   settings.py       # pydantic-settings; all env vars prefixed WIKITREE_
-  client.py         # WikiTreeClient — async HTTP, retry, status-check
-  server.py         # FastMCP server, AppContext lifespan, _META_TOOLS registration
-  operations.py     # OperationEntry + OPERATION_REGISTRY + search_operations() + summarize_params()
+  client.py         # WikiTreeClient -- async HTTP, retry, status-check
+  server.py         # FastMCP server, AppContext lifespan, library-backed tool registration
+  operations.py     # Pydantic param models + OPERATION_REGISTRY (OperationEntry from mcp-codemode)
   tools/
-    _errors.py      # McpToolError, raise_tool_error (MCP-8, MCP-10)
-    meta_search.py  # search meta-tool: operation discovery by keyword
-    meta_execute.py # execute meta-tool: validated dispatch to handlers
+    _errors.py      # McpToolError (from mcp-codemode), raise_tool_error (local, WikiTree-specific)
     profiles.py     # 4 handlers: get_profile, get_person, get_people, search_person
     genealogy.py    # 3 handlers: get_ancestors, get_descendants, get_relatives
     content.py      # 3 handlers: get_bio, get_photos, get_categories
@@ -68,19 +66,20 @@ Operations: `get_profile`, `get_person`, `get_people`, `search_person`,
 ### Data Flow
 
 ```
-LLM -> search(query) -> OPERATION_REGISTRY -> matching operations
-LLM -> execute(operation, params) -> validate params -> handler(params, client) -> WikiTree API
+LLM -> search(query) -> mcp_codemode.search_operations(query, OPERATION_REGISTRY) -> matching operations
+LLM -> execute(operation, params) -> mcp_codemode.execute_operation(args, OPERATION_REGISTRY, ctx) -> handler(ctx, validated_params) -> WikiTree API
 ```
 
 ### Handler Signature
 
 All handlers follow the same pattern:
 ```python
-async def handler(params: dict, client: WikiTreeClient) -> list[TextContent]
+async def handler(ctx: Any, params: Any) -> list[TextContent]
 ```
 
-The `execute` meta-tool extracts the `WikiTreeClient` from the FastMCP lifespan
-context and passes it to handlers. Handlers never see `ctx`.
+The `mcp-codemode` library's `execute_operation` validates params via Pydantic,
+then calls the handler with `(ctx, validated_params)`. Handlers extract the
+`WikiTreeClient` themselves: `ctx.request_context.lifespan_context.client`.
 
 ## Key Settings
 
@@ -110,8 +109,8 @@ context and passes it to handlers. Handlers never see `ctx`.
 - `tests/test_settings.py` — settings validation
 - `tests/test_errors.py` — McpToolError and raise_tool_error
 - `tests/test_operations.py` — registry completeness, search scoring, param validation
-- `tests/test_meta_search.py` — search meta-tool
-- `tests/test_meta_execute.py` — execute meta-tool dispatch, validation, error handling
+- `tests/test_meta_search.py` — search meta-tool (via FastMCP tool registration)
+- `tests/test_meta_execute.py` — execute meta-tool dispatch, validation, error handling (via FastMCP tool registration)
 - `tests/test_tools_*.py` — handler unit tests using `AsyncMock(spec=WikiTreeClient)`
 
 ### Live tests (manual, gated)

@@ -5,3 +5,12 @@ include:
 
 variables:
   YAMLLINT_EXCLUDE: ".github"
+  ENABLE_PUBLISH_PYPI: "false"
+  ENABLE_PUBLISH_GITLAB: "false"
+
+# GitLab's dependency_scanning template placeholder fails when no
+# language-specific analyzer child job overrides it. Python repos
+# use pip-audit via `make audit` (security-audit job) instead.
+dependency_scanning:
+  rules:
+    - when: never

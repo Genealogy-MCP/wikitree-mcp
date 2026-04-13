@@ -3,12 +3,21 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock, PropertyMock
 
 import pytest
 
 from wikitree_mcp.client import WikiTreeApiError, WikiTreeClient
+from wikitree_mcp.operations import ConnectedProfilesByDNAParams, DNAKeyParams
+from wikitree_mcp.server import AppContext
 from wikitree_mcp.tools._errors import McpToolError
+
+
+def _make_ctx(mock_client: AsyncMock) -> MagicMock:
+    """Build a mock context wrapping a mock WikiTreeClient."""
+    ctx = MagicMock()
+    ctx.request_context.lifespan_context = AppContext(client=mock_client)
+    return ctx
 
 
 @pytest.fixture
@@ -28,7 +37,8 @@ async def test_get_dna_tests_by_test_taker(
             "dnaTests": [{"dna_id": "1", "dna_slug": "23andme_audna"}],
         }
     ]
-    result = await get_dna_tests_handler({"key": "Whitten-1"}, mock_client)
+    ctx = _make_ctx(mock_client)
+    result = await get_dna_tests_handler(ctx, DNAKeyParams(key="Whitten-1"))
     mock_client.call.assert_called_once_with(
         "getDNATestsByTestTaker",
         key="Whitten-1",
@@ -50,7 +60,10 @@ async def test_get_connected_profiles_by_dna_test(
             "connections": [{"Id": "13654071", "Name": "Whitten-1205"}],
         }
     ]
-    result = await get_connected_profiles_handler({"key": "Whitten-1", "dna_id": 1}, mock_client)
+    ctx = _make_ctx(mock_client)
+    result = await get_connected_profiles_handler(
+        ctx, ConnectedProfilesByDNAParams(key="Whitten-1", dna_id=1)
+    )
     mock_client.call.assert_called_once_with(
         "getConnectedProfilesByDNATest",
         key="Whitten-1",
@@ -73,7 +86,8 @@ async def test_get_connected_dna_tests_by_profile(
             "dnaTests": [{"dna_id": "1", "taker": {"Name": "Whitten-1"}}],
         }
     ]
-    result = await get_connected_dna_tests_handler({"key": "Whitten-1"}, mock_client)
+    ctx = _make_ctx(mock_client)
+    result = await get_connected_dna_tests_handler(ctx, DNAKeyParams(key="Whitten-1"))
     mock_client.call.assert_called_once_with(
         "getConnectedDNATestsByProfile",
         key="Whitten-1",
@@ -82,28 +96,26 @@ async def test_get_connected_dna_tests_by_profile(
 
 
 async def test_get_dna_tests_with_auth() -> None:
-    from unittest.mock import PropertyMock
-
     from wikitree_mcp.tools.dna import get_dna_tests_handler
 
     client = AsyncMock(spec=WikiTreeClient)
     client.call.return_value = [{"status": 0, "dnaTests": []}]
     type(client).settings = PropertyMock(return_value=type("S", (), {"has_credentials": True})())
     client.ensure_auth = AsyncMock()
-    await get_dna_tests_handler({"key": "X-1"}, client)
+    ctx = _make_ctx(client)
+    await get_dna_tests_handler(ctx, DNAKeyParams(key="X-1"))
     client.ensure_auth.assert_awaited_once()
 
 
 async def test_get_dna_tests_without_auth() -> None:
-    from unittest.mock import PropertyMock
-
     from wikitree_mcp.tools.dna import get_dna_tests_handler
 
     client = AsyncMock(spec=WikiTreeClient)
     client.call.return_value = [{"status": 0, "dnaTests": []}]
     type(client).settings = PropertyMock(return_value=type("S", (), {"has_credentials": False})())
     client.ensure_auth = AsyncMock()
-    await get_dna_tests_handler({"key": "X-1"}, client)
+    ctx = _make_ctx(client)
+    await get_dna_tests_handler(ctx, DNAKeyParams(key="X-1"))
     client.ensure_auth.assert_not_awaited()
 
 
@@ -113,5 +125,6 @@ async def test_get_dna_tests_api_error(
     from wikitree_mcp.tools.dna import get_dna_tests_handler
 
     mock_client.call.side_effect = WikiTreeApiError("Timeout")
+    ctx = _make_ctx(mock_client)
     with pytest.raises(McpToolError, match="Timeout"):
-        await get_dna_tests_handler({"key": "Bad-1"}, mock_client)
+        await get_dna_tests_handler(ctx, DNAKeyParams(key="Bad-1"))

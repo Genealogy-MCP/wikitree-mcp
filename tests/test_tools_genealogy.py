@@ -3,17 +3,30 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from wikitree_mcp.client import WikiTreeApiError, WikiTreeClient
+from wikitree_mcp.operations import (
+    GetAncestorsParams,
+    GetDescendantsParams,
+    GetRelativesParams,
+)
+from wikitree_mcp.server import AppContext
 from wikitree_mcp.tools._errors import McpToolError
 from wikitree_mcp.tools.genealogy import (
     get_ancestors_handler,
     get_descendants_handler,
     get_relatives_handler,
 )
+
+
+def _make_ctx(mock_client: AsyncMock) -> MagicMock:
+    """Build a mock context wrapping a mock WikiTreeClient."""
+    ctx = MagicMock()
+    ctx.request_context.lifespan_context = AppContext(client=mock_client)
+    return ctx
 
 
 @pytest.fixture
@@ -25,7 +38,8 @@ async def test_get_ancestors(mock_client: AsyncMock) -> None:
     mock_client.call.return_value = [
         {"status": "", "people": {"1": {"Id": 1, "Name": "Clemens-1"}}}
     ]
-    result = await get_ancestors_handler({"key": "Clemens-1", "depth": 3}, mock_client)
+    ctx = _make_ctx(mock_client)
+    result = await get_ancestors_handler(ctx, GetAncestorsParams(key="Clemens-1", depth=3))
     mock_client.call.assert_called_once_with(
         "getPeople",
         keys="Clemens-1",
@@ -39,7 +53,8 @@ async def test_get_ancestors(mock_client: AsyncMock) -> None:
 
 async def test_get_descendants(mock_client: AsyncMock) -> None:
     mock_client.call.return_value = [{"status": 0}]
-    result = await get_descendants_handler({"key": "Clemens-1", "depth": 2}, mock_client)
+    ctx = _make_ctx(mock_client)
+    result = await get_descendants_handler(ctx, GetDescendantsParams(key="Clemens-1", depth=2))
     mock_client.call.assert_called_once_with(
         "getDescendants",
         key="Clemens-1",
@@ -52,7 +67,8 @@ async def test_get_descendants(mock_client: AsyncMock) -> None:
 
 async def test_get_relatives(mock_client: AsyncMock) -> None:
     mock_client.call.return_value = [{"status": 0}]
-    result = await get_relatives_handler({"keys": "Clemens-1", "get_parents": 1}, mock_client)
+    ctx = _make_ctx(mock_client)
+    result = await get_relatives_handler(ctx, GetRelativesParams(keys="Clemens-1", get_parents=1))
     mock_client.call.assert_called_once_with(
         "getRelatives",
         keys="Clemens-1",
@@ -67,5 +83,6 @@ async def test_get_relatives(mock_client: AsyncMock) -> None:
 
 async def test_get_ancestors_api_error(mock_client: AsyncMock) -> None:
     mock_client.call.side_effect = WikiTreeApiError("Timeout")
+    ctx = _make_ctx(mock_client)
     with pytest.raises(McpToolError, match="Timeout"):
-        await get_ancestors_handler({"key": "Bad-1", "depth": 1}, mock_client)
+        await get_ancestors_handler(ctx, GetAncestorsParams(key="Bad-1", depth=1))
