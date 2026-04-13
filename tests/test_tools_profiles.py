@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from wikitree_mcp.client import WikiTreeApiError, WikiTreeClient
+from wikitree_mcp.operations import (
+    GetPeopleParams,
+    ProfileKeyParams,
+    SearchPersonParams,
+)
+from wikitree_mcp.server import AppContext
 from wikitree_mcp.tools._errors import McpToolError
 from wikitree_mcp.tools.profiles import (
     get_people_handler,
@@ -17,6 +23,13 @@ from wikitree_mcp.tools.profiles import (
 )
 
 
+def _make_ctx(mock_client: AsyncMock) -> MagicMock:
+    """Build a mock context wrapping a mock WikiTreeClient."""
+    ctx = MagicMock()
+    ctx.request_context.lifespan_context = AppContext(client=mock_client)
+    return ctx
+
+
 @pytest.fixture
 def mock_client() -> AsyncMock:
     return AsyncMock(spec=WikiTreeClient)
@@ -24,7 +37,8 @@ def mock_client() -> AsyncMock:
 
 async def test_get_profile(mock_client: AsyncMock) -> None:
     mock_client.call.return_value = [{"page_name": "Clemens-1", "status": 0}]
-    result = await get_profile_handler({"key": "Clemens-1", "fields": "Id,Name"}, mock_client)
+    ctx = _make_ctx(mock_client)
+    result = await get_profile_handler(ctx, ProfileKeyParams(key="Clemens-1", fields="Id,Name"))
     mock_client.call.assert_called_once_with(
         "getProfile",
         key="Clemens-1",
@@ -38,7 +52,8 @@ async def test_get_profile(mock_client: AsyncMock) -> None:
 
 async def test_get_person(mock_client: AsyncMock) -> None:
     mock_client.call.return_value = [{"page_name": "Clemens-1", "status": 0}]
-    result = await get_person_handler({"key": "Clemens-1", "bio_format": "wiki"}, mock_client)
+    ctx = _make_ctx(mock_client)
+    result = await get_person_handler(ctx, ProfileKeyParams(key="Clemens-1", bio_format="wiki"))
     mock_client.call.assert_called_once_with(
         "getPerson",
         key="Clemens-1",
@@ -51,7 +66,8 @@ async def test_get_person(mock_client: AsyncMock) -> None:
 
 async def test_get_people(mock_client: AsyncMock) -> None:
     mock_client.call.return_value = [{"status": 0}]
-    result = await get_people_handler({"keys": "Clemens-1,Twain-1", "ancestors": 2}, mock_client)
+    ctx = _make_ctx(mock_client)
+    result = await get_people_handler(ctx, GetPeopleParams(keys="Clemens-1,Twain-1", ancestors=2))
     mock_client.call.assert_called_once_with(
         "getPeople",
         keys="Clemens-1,Twain-1",
@@ -68,9 +84,10 @@ async def test_get_people(mock_client: AsyncMock) -> None:
 
 async def test_search_person(mock_client: AsyncMock) -> None:
     mock_client.call.return_value = [{"status": 0}]
+    ctx = _make_ctx(mock_client)
     result = await search_person_handler(
-        {"first_name": "Mark", "last_name": "Twain", "limit": 10},
-        mock_client,
+        ctx,
+        SearchPersonParams(first_name="Mark", last_name="Twain", limit=10),
     )
     mock_client.call.assert_called_once_with(
         "searchPerson",
@@ -89,5 +106,6 @@ async def test_search_person(mock_client: AsyncMock) -> None:
 
 async def test_get_profile_api_error(mock_client: AsyncMock) -> None:
     mock_client.call.side_effect = WikiTreeApiError("Not found")
+    ctx = _make_ctx(mock_client)
     with pytest.raises(McpToolError, match="Not found"):
-        await get_profile_handler({"key": "Bad-1"}, mock_client)
+        await get_profile_handler(ctx, ProfileKeyParams(key="Bad-1"))

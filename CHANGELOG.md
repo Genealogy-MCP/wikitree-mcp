@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Migrate CI pipeline to shared templates from facastagnini/ci-templates
+- Migrate to mcp-codemode library for Code Mode framework (search, execute, error handling)
+
+### Removed
+
+- Local OperationEntry, search_operations, summarize_params -- now provided by mcp-codemode library
+- tools/meta_search.py and tools/meta_execute.py -- replaced by library-backed registration in server.py
 
 
 ### Added

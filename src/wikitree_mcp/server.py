@@ -13,17 +13,16 @@ from typing import Any
 
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.types import TextContent, ToolAnnotations
+from mcp_codemode import (
+    ExecuteOperationParams,
+    SearchOperationsParams,
+    execute_operation,
+    format_search_results,
+    search_operations,
+)
 
 from wikitree_mcp.client import WikiTreeClient
 from wikitree_mcp.settings import Settings
-from wikitree_mcp.tools.meta_execute import (
-    ExecuteOperationParams,
-    execute_operation_tool,
-)
-from wikitree_mcp.tools.meta_search import (
-    SearchOperationsParams,
-    search_operations_tool,
-)
 
 # MCP-15: stdio transport uses stdout as JSON-RPC channel; log to stderr.
 logging.basicConfig(level=logging.INFO, stream=sys.stderr)
@@ -47,82 +46,63 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
         await client.close()
 
 
-# ============================================================================
-# Code Mode: 2 Meta-Tool Registration (MCP-ORG-1)
-# ============================================================================
+def _register_tools(mcp: FastMCP) -> None:
+    """Register search + execute meta-tools using library functions.
 
-_META_TOOLS: dict[str, dict[str, Any]] = {
-    "search": {
-        "schema": SearchOperationsParams,
-        "handler": search_operations_tool,
-        "description": (
+    Uses mcp.types.ToolAnnotations directly to avoid the library's
+    lightweight ToolAnnotations dataclass incompatibility with newer
+    FastMCP versions (library bug, tracked upstream).
+    """
+
+    @mcp.tool(
+        name="search",
+        description=(
             "Discover available WikiTree operations and their parameters. "
             "Call with a top-level 'query' string (not inside params). "
             "Returns matching operations with parameter schemas. "
             "Always use this before calling 'execute' to find the correct "
             "operation name."
         ),
-        "annotations": ToolAnnotations(
+        annotations=ToolAnnotations(
             readOnlyHint=True,
             destructiveHint=False,
             idempotentHint=True,
             openWorldHint=False,
         ),
-    },
-    "execute": {
-        "schema": ExecuteOperationParams,
-        "handler": execute_operation_tool,
-        "description": (
+    )
+    async def search(arguments: SearchOperationsParams) -> list[TextContent]:
+        from wikitree_mcp.operations import OPERATION_REGISTRY
+
+        matches = search_operations(
+            arguments.query,
+            OPERATION_REGISTRY,
+            category=arguments.category,
+        )
+        text = format_search_results(matches, OPERATION_REGISTRY)
+        return [TextContent(type="text", text=text)]
+
+    @mcp.tool(
+        name="execute",
+        description=(
             "Run a named operation against the WikiTree API. "
             "Use 'search' first to discover the exact operation name and "
             "its params schema, then call this with "
             "{operation: '...', params: {...}}."
         ),
-        "annotations": ToolAnnotations(
+        annotations=ToolAnnotations(
             readOnlyHint=True,
             destructiveHint=False,
             idempotentHint=False,
             openWorldHint=True,
         ),
-    },
-}
-
-
-def register_tools(app: FastMCP) -> None:
-    """Register the 2 Code Mode meta-tools with FastMCP."""
-    # search: no ctx needed (queries local registry only)
-    search_config = _META_TOOLS["search"]
-    search_handler = search_config["handler"]
-
-    async def search(
-        arguments: SearchOperationsParams,
-    ) -> list[TextContent]:
-        return await search_handler(arguments.model_dump())
-
-    search.__name__ = "search"
-    search.__doc__ = search_config["description"]
-    app.tool(
-        description=search_config["description"],
-        annotations=search_config["annotations"],
-    )(search)
-
-    # execute: needs ctx to extract WikiTreeClient from lifespan
-    execute_config = _META_TOOLS["execute"]
-    execute_handler = execute_config["handler"]
-
+    )
     async def execute(
         ctx: Context[Any, Any, Any],
         arguments: ExecuteOperationParams,
-    ) -> list[TextContent]:
-        client = ctx.request_context.lifespan_context.client
-        return await execute_handler(arguments.model_dump(), client)
+    ) -> list[Any]:
+        from wikitree_mcp.operations import OPERATION_REGISTRY
 
-    execute.__name__ = "execute"
-    execute.__doc__ = execute_config["description"]
-    app.tool(
-        description=execute_config["description"],
-        annotations=execute_config["annotations"],
-    )(execute)
+        return await execute_operation(arguments.model_dump(), OPERATION_REGISTRY, ctx)
 
 
 def create_server() -> FastMCP:
@@ -130,7 +110,7 @@ def create_server() -> FastMCP:
     from wikitree_mcp.operations import OPERATION_REGISTRY
 
     mcp = FastMCP("WikiTree", lifespan=app_lifespan)
-    register_tools(mcp)
+    _register_tools(mcp)
 
     @mcp.custom_route("/health", ["GET"])
     async def health_check(request: Any) -> Any:
@@ -141,7 +121,7 @@ def create_server() -> FastMCP:
             {
                 "status": "healthy",
                 "service": "WikiTree MCP Server",
-                "tools": len(_META_TOOLS),
+                "tools": 2,
                 "operations": len(OPERATION_REGISTRY),
             }
         )
